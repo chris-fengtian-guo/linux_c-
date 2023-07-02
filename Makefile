@@ -5,17 +5,24 @@ CC = g++
 #  -Wall turns on most, but not all, compiler warnings
 #  -std=c++11 to use the C++11 standard
 CFLAGS  = -g  -Wall -std=c++11
+CFLAGS  = -g  -Wall -std=c++11 -pthread
 
 # libraries to link into executable:
 LIBS = -lboost_system -lrt
+LIBS = -lboost_system -lrt -pthread
 
 # the name to use for both the target source file, and the output file:
-TARGET = shared_memory
+TARGET1 = shared_memory
+TARGET2 = thread_test
 
-all: $(TARGET)
 
-$(TARGET): $(TARGET).cpp
-	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).cpp $(LIBS)
+all: $(TARGET1) $(TARGET2)
+
+$(TARGET1): $(TARGET1).cpp
+	$(CC) $(CFLAGS) -o $(TARGET1) $(TARGET1).cpp $(LIBS)
+$(TARGET2): $(TARGET2).cpp
+	$(CC) $(CFLAGS) -o $(TARGET2) $(TARGET2).cpp $(LIBS)
+
 
 clean:
-	$(RM) $(TARGET)
+	$(RM) $(TARGET1) $(TARGET2)
