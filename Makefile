@@ -9,19 +9,23 @@ CFLAGS  = -g  -Wall -std=c++11 -pthread
 
 # libraries to link into executable:
 LIBS = -lboost_system -lrt
-LIBS = -lboost_system -lrt -pthread
+LIBS = -lboost_system -lrt -pthread -lglog
 
 # the name to use for both the target source file, and the output file:
 TARGET1 = shared_memory
 TARGET2 = thread_test
+TARGET3 = google_log
 
 
-all: $(TARGET1) $(TARGET2)
+all: $(TARGET1) $(TARGET2) $(TARGET3)
 
 $(TARGET1): $(TARGET1).cpp
 	$(CC) $(CFLAGS) -o $(TARGET1) $(TARGET1).cpp $(LIBS)
 $(TARGET2): $(TARGET2).cpp
 	$(CC) $(CFLAGS) -o $(TARGET2) $(TARGET2).cpp $(LIBS)
+$(TARGET3): $(TARGET3).cpp
+	$(CC) $(CFLAGS) -o $(TARGET3) $(TARGET3).cpp $(LIBS)
+
 
 
 clean:
