@@ -1,0 +1,32 @@
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <iostream>
+#include <cstring>
+
+int main() {
+    using namespace boost::interprocess;
+
+    // 创建一个共享内存对象。 这个对象还并没有分配内存
+    shared_memory_object shdmem{open_or_create, "Boost", read_write};
+
+    // 设置共享内存对象的大小
+    shdmem.truncate(1024);
+
+    // 映射共享内存对象到当前进程的地址空间
+    mapped_region region{shdmem, read_write};
+
+    // 获取映射区的地址
+    void * addr = region.get_address();
+    std::memset(addr, 1, region.get_size());
+
+    // 检查是否写入成功
+    char *mem = static_cast<char*>(addr);
+    std::cout << "Memory successfully set? " << std::boolalpha
+              << (std::count(mem, mem + region.get_size(), 1) == static_cast<std::ptrdiff_t>(region.get_size())) 
+              << '\n';
+
+    // 移除共享内存对象
+    shared_memory_object::remove("Boost");
+
+    return 0;
+}
