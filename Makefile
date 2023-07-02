@@ -9,6 +9,8 @@ CFLAGS = -g -Wall -std=c++11 -pthread
 
 # Libraries to link into executable
 LIBS = -lboost_system -lrt -lglog -pthread
+# libraries to link into executable:
+LIBS = -lboost_system -lrt -lglog -pthread -lcrypto
 
 # Create a list of source files
 SOURCES = $(wildcard *.cpp)
