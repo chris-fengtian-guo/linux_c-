@@ -1,32 +1,29 @@
-# the compiler to use.
+# The compiler to use
 CC = g++
 
-# compiler flags:
-#  -Wall turns on most, but not all, compiler warnings
-#  -std=c++11 to use the C++11 standard
-CFLAGS  = -g  -Wall -std=c++11
-CFLAGS  = -g  -Wall -std=c++11 -pthread
+# Compiler flags:
+# -g for debugging info in executable
+# -Wall to turn on most compiler warnings
+# -std=c++11 to use the C++11 standard
+CFLAGS = -g -Wall -std=c++11 -pthread
 
-# libraries to link into executable:
-LIBS = -lboost_system -lrt
-LIBS = -lboost_system -lrt -pthread -lglog
+# Libraries to link into executable
+LIBS = -lboost_system -lrt -lglog -pthread
 
-# the name to use for both the target source file, and the output file:
-TARGET1 = shared_memory
-TARGET2 = thread_test
-TARGET3 = google_log
+# Create a list of source files
+SOURCES = $(wildcard *.cpp)
 
+# Create a list of executables
+TARGETS = $(SOURCES:.cpp=)
 
-all: $(TARGET1) $(TARGET2) $(TARGET3)
+# Default rule
+all: $(TARGETS)
 
-$(TARGET1): $(TARGET1).cpp
-	$(CC) $(CFLAGS) -o $(TARGET1) $(TARGET1).cpp $(LIBS)
-$(TARGET2): $(TARGET2).cpp
-	$(CC) $(CFLAGS) -o $(TARGET2) $(TARGET2).cpp $(LIBS)
-$(TARGET3): $(TARGET3).cpp
-	$(CC) $(CFLAGS) -o $(TARGET3) $(TARGET3).cpp $(LIBS)
+# Rule to make each target
+%: %.cpp
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-
-
+# Clean up the build
+.PHONY: clean
 clean:
-	$(RM) $(TARGET1) $(TARGET2)
+	rm -f $(TARGETS)
