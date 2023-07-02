@@ -4,7 +4,7 @@ CC = g++
 # compiler flags:
 #  -Wall turns on most, but not all, compiler warnings
 #  -std=c++11 to use the C++11 standard
-CFLAGS  = -Wall -std=c++11
+CFLAGS  = -g  -Wall -std=c++11
 
 # libraries to link into executable:
 LIBS = -lboost_system -lrt
