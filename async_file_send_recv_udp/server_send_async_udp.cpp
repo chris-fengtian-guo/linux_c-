@@ -18,22 +18,7 @@
 #include <boost/asio.hpp>
 #include <openssl/md5.h>
 
-using boost::asio::ip::tcp;
-
-std::string get_file_md5(const std::string& file_name) {
-    unsigned char result[MD5_DIGEST_LENGTH];
-    std::ifstream file(file_name, std::ios::binary);
-    std::vector<char> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-    MD5((unsigned char*)&buffer[0], buffer.size(), result);
-
-    std::ostringstream sout;
-    sout<<std::hex<<std::setfill('0');
-    for(long long c: result) {
-        sout<<std::setw(2)<<(long long)c;
-    }
-    return sout.str();
-}
+using boost::asio::ip::udp;
 
 void handle_send(const boost::system::error_code& error, std::size_t bytes_transferred, std::ifstream& file, uint32_t sequence_number, udp::socket& socket, udp::endpoint& endpoint, std::vector<char>& buffer) {
     if (!file.eof() && !file.fail()) {

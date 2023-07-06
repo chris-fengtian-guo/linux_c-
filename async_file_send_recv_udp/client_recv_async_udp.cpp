@@ -5,8 +5,11 @@
 
 using boost::asio::ip::udp;
 
-void handle_receive(size_t bytes_transferred, boost::system::error_code error,
-                    udp::socket& socket, udp::endpoint& endpoint, std::vector<char>& buffer, std::ofstream& file, uint32_t& expected_sequence_number, std::map<uint32_t, std::vector<char>>& out_of_order_data) {
+void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred,
+		                    udp::socket& socket, udp::endpoint& endpoint, std::vector<char>& buffer, 
+				                        std::ofstream& file, uint32_t& expected_sequence_number, 
+							                    std::map<uint32_t, std::vector<char>>& out_of_order_data)
+{
     if (error) {
         std::cerr << "Receive error: " << error.message() << "\n";
         return;
@@ -32,7 +35,11 @@ void handle_receive(size_t bytes_transferred, boost::system::error_code error,
     }
 
     // Continue receiving.
-    socket.async_receive_from(boost::asio::buffer(buffer), endpoint, std::bind(handle_receive, std::placeholders::_1, std::placeholders::_2, std::ref(socket), std::ref(endpoint), std::ref(buffer), std::ref(file), std::ref(expected_sequence_number), std::ref(out_of_order_data)));
+    socket.async_receive_from(boost::asio::buffer(buffer), endpoint, 
+                          std::bind(handle_receive, std::placeholders::_1, std::placeholders::_2, 
+                                    std::ref(socket), std::ref(endpoint), std::ref(buffer), 
+                                    std::ref(file), std::ref(expected_sequence_number), 
+                                    std::ref(out_of_order_data)));
 }
 
 int main() {
