@@ -45,10 +45,12 @@ void receive_file(tcp::socket& socket, const std::string& file_name) {
     // Then receive the file data.
     std::vector<char> file_data(1024);
     size_t length;
+    size_t total_length = 0;
     try {
         while ((length = socket.read_some(boost::asio::buffer(file_data))) > 0) {
             file.write(file_data.data(), length);
-            
+            total_length += length;
+
             // Check if the write was successful.
             if (file.fail()) {
                 std::cerr << "Failed to write to the file.\n";
@@ -61,6 +63,10 @@ void receive_file(tcp::socket& socket, const std::string& file_name) {
             std::cerr << "Read error: " << ex.what() << "\n";
         }
     }
+
+    file.close();
+
+    std::cout << "Total bytes received: " << total_length << "\n";
 
     // Verify the MD5 of the received file.
     std::string received_md5 = get_file_md5(file_name);
