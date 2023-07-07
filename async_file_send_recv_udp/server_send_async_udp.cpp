@@ -19,14 +19,8 @@
 #include <openssl/md5.h>
 
 using boost::asio::ip::udp;
-
-void handle_send(const boost::system::error_code& error, std::size_t bytes_transferred, std::ifstream& file, uint32_t sequence_number, udp::socket& socket, udp::endpoint& endpoint, std::vector<char>& buffer) {
-    if (error) {
-        std::cerr << "Send error: " << error.message() << "\n";
-        return;
-    }
-
-    if (!file.eof()) {
+void handle_send(const boost::system::error_code& error, std::size_t bytes_transferred, std::ifstream& file, std::streamsize& total_read, std::streamsize total_length, uint32_t sequence_number, udp::socket& socket, udp::endpoint& endpoint, std::vector<char>& buffer) {
+    if (!error && total_read < total_length) {
         sequence_number++;
 
         // Add sequence number to the buffer.
@@ -35,16 +29,16 @@ void handle_send(const boost::system::error_code& error, std::size_t bytes_trans
         // Read file data into the buffer, after the sequence number.
         file.read(buffer.data() + sizeof(sequence_number), buffer.size() - sizeof(sequence_number));
         std::streamsize data_read = file.gcount();
+        total_read += data_read;
 
-        if (!file) {
-            std::cerr << "Read error or end of file.\n";
-            return;
+        if (total_read <= total_length) {
+            socket.async_send_to(boost::asio::buffer(buffer.data(), sizeof(sequence_number) + data_read), endpoint,
+                std::bind(handle_send, std::placeholders::_1, std::placeholders::_2, std::ref(file), std::ref(total_read), total_length, sequence_number, std::ref(socket), std::ref(endpoint), std::ref(buffer)));
+        } else {
+            std::cout << "File sent successfully.\n";
         }
-
-        socket.async_send_to(boost::asio::buffer(buffer.data(), sizeof(sequence_number) + data_read), endpoint,
-            std::bind(handle_send, std::placeholders::_1, std::placeholders::_2, std::ref(file), sequence_number, std::ref(socket), std::ref(endpoint), std::ref(buffer)));
     } else {
-        std::cout << "File sent successfully.\n";
+        std::cerr << "Error while sending file: " << error.message() << "\n";
     }
 }
 
@@ -56,7 +50,13 @@ void send_file(udp::socket& socket, udp::endpoint& endpoint, const std::string& 
         return;
     }
 
+    // Get the file length
+    file.seekg(0, file.end);
+    std::streamsize total_length = file.tellg();
+    file.seekg(0, file.beg);
+
     uint32_t sequence_number = 0;
+    std::streamsize total_read = 0;
 
     std::vector<char> buffer(1024 + sizeof(sequence_number));
 
@@ -66,10 +66,15 @@ void send_file(udp::socket& socket, udp::endpoint& endpoint, const std::string& 
     // Read file data into the buffer, after the sequence number.
     file.read(buffer.data() + sizeof(sequence_number), buffer.size() - sizeof(sequence_number));
     std::streamsize data_read = file.gcount();
+    total_read += data_read;
 
-    socket.async_send_to(boost::asio::buffer(buffer.data(), sizeof(sequence_number) + data_read), endpoint,
-        std::bind(handle_send, std::placeholders::_1, std::placeholders::_2, std::ref(file), sequence_number, std::ref(socket), std::ref(endpoint), std::ref(buffer)));
+    if (total_read < total_length) {
+        socket.async_send_to(boost::asio::buffer(buffer.data(), sizeof(sequence_number) + data_read), endpoint,
+            std::bind(handle_send, std::placeholders::_1, std::placeholders::_2, std::ref(file), total_read, total_length, sequence_number, std::ref(socket), std::ref(endpoint), std::ref(buffer)));
+    }
 }
+
+/////
 
 int main() {
     try {
