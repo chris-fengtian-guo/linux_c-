@@ -21,7 +21,12 @@
 using boost::asio::ip::udp;
 
 void handle_send(const boost::system::error_code& error, std::size_t bytes_transferred, std::ifstream& file, uint32_t sequence_number, udp::socket& socket, udp::endpoint& endpoint, std::vector<char>& buffer) {
-    if (!file.eof() && !file.fail()) {
+    if (error) {
+        std::cerr << "Send error: " << error.message() << "\n";
+        return;
+    }
+
+    if (!file.eof()) {
         sequence_number++;
 
         // Add sequence number to the buffer.
@@ -31,15 +36,17 @@ void handle_send(const boost::system::error_code& error, std::size_t bytes_trans
         file.read(buffer.data() + sizeof(sequence_number), buffer.size() - sizeof(sequence_number));
         std::streamsize data_read = file.gcount();
 
+        if (!file) {
+            std::cerr << "Read error or end of file.\n";
+            return;
+        }
+
         socket.async_send_to(boost::asio::buffer(buffer.data(), sizeof(sequence_number) + data_read), endpoint,
             std::bind(handle_send, std::placeholders::_1, std::placeholders::_2, std::ref(file), sequence_number, std::ref(socket), std::ref(endpoint), std::ref(buffer)));
     } else {
         std::cout << "File sent successfully.\n";
     }
 }
-
-
-
 
 void send_file(udp::socket& socket, udp::endpoint& endpoint, const std::string& file_name) {
     std::ifstream file(file_name, std::ios::binary);
