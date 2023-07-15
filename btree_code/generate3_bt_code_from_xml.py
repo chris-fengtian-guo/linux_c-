@@ -1,79 +1,45 @@
 import xml.etree.ElementTree as ET
 
-def parse_xml(file):
-    tree = ET.parse(file)
+def generate_cpp_code_from_bt_xml(bt_xml_filename):
+    tree = ET.parse(bt_xml_filename)
     root = tree.getroot()
 
-    nodes = []
+    node_dict = {}
+    # 先解析 <Nodes> 下的所有节点
+    for node in root.find('Nodes'):
+        node_id = node.attrib['ID']
+        inports = [port.attrib['name'] for port in node.findall('InputPort')]
+        outports = [port.attrib['name'] for port in node.findall('OutputPort')]
+        node_dict[node_id] = (inports, outports)
 
-    # 记录每个动作节点出现的次数
-    action_count = {}
-
-    # 解析条件节点
-    for condition in root.iter('Condition'):
-        condition_name = condition.get('ID')
-        nodes.append(('Condition', condition_name, [], []))
-
-    # 解析动作节点
+    # 遍历行为树结构
     for action in root.iter('Action'):
-        action_name = action.get('ID')
+        node_id = action.attrib['ID']
+        inports, outports = node_dict.get(node_id, ([], []))
 
-        # 如果动作节点已出现过，则在其名字后添加计数值
-        if action_name in action_count:
-            action_count[action_name] += 1
-            action_name += str(action_count[action_name])
-        else:
-            action_count[action_name] = 0
+        # 生成代码
+        print(f'class {node_id}(BT::SyncActionNode)')
+        print('{')
+        print('public:')
+        print(f'    {node_id}(const std::string& name, const BT::NodeConfiguration& config)')
+        print('        : BT::SyncActionNode(name, config)')
+        print('    { }')
 
-        inputs = []
-        outputs = []
-        
-        # 解析输入端口
-        for input_port in action.iter('InputPort'):
-            inputs.append(input_port.get('name'))
+        print('    static BT::PortsList providedPorts()')
+        print('    {')
+        print('        return{')
+        for port_name in inports:
+            print(f'            {"{"}BT::InputPort<std::string>("{port_name}"){"}"},')
+        for port_name in outports:
+            print(f'            {"{"}BT::OutputPort<std::string>("{port_name}"){"}"},')
+        print('        };')
+        print('    }')
 
-        # 解析输出端口
-        for output_port in action.iter('OutputPort'):
-            outputs.append(output_port.get('name'))
+        print('    virtual BT::NodeStatus tick() override')
+        print('    {')
+        print(f'        return DataControl::{node_id}(input_str, output_str);')
+        print('    }')
+        print('};')
+        print('\n')
 
-        nodes.append(('Action', action_name, inputs, outputs))
-
-    return nodes
-
-def generate_cpp(nodes):
-    for node_type, node_name, inputs, outputs in nodes:
-        if node_type == 'Condition':
-            parent_class = 'BT::ConditionNode'
-        elif node_type == 'Action':
-            parent_class = 'BT::SyncActionNode'
-        else:
-            continue
-
-        print(f"class {node_name} : public {parent_class}")
-        print("{")
-        print("public:")
-        print(f"    {node_name}(const std::string& name, const BT::NodeConfiguration& config)")
-        print("        : BT::SyncActionNode(name, config)")
-        print("    {}")
-        print()
-        print("    BT::NodeStatus tick() override")
-        print("    {")
-        print("        std::string input_str, output_str;")
-        print(f"        return DataControl::{node_name}(input_str, output_str);")
-        print("    }")
-        print()
-        print("    static BT::PortsList providedPorts()")
-        print("    {")
-        print("        return{")
-        for input_port in inputs:
-            print(f"            BT::InputPort<std::string>(\"{input_port}\"),")
-        for output_port in outputs:
-            print(f"            BT::OutputPort<std::string>(\"{output_port}\"),")
-        print("        };")
-        print("    }")
-        print("};")
-        print()
-
-if __name__ == "__main__":
-    nodes = parse_xml('my_tree2.xml')
-    generate_cpp(nodes)
+generate_cpp_code_from_bt_xml('my_tree2.xml')
