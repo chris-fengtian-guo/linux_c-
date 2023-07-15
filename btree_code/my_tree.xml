@@ -1,0 +1,16 @@
+<root main_tree_to_execute = "MainTree">
+    <BehaviorTree ID="MainTree">
+        <SequenceStar name="root_sequence">
+            <Condition ID="CheckRobotStatus" />
+            <Action ID="SaveTaskToDatabase" />
+            <Action ID="DecomposeTask">
+                <InputPort name="Task" />
+                <OutputPort name="SubTasks" />
+            </Action>
+            <Action ID="DispatchTask">
+                <InputPort name="SubTasks" />
+            </Action>
+            <Action ID="NotifyCleaningResult" />
+        </SequenceStar>
+    </BehaviorTree>
+</root>
