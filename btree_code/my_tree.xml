@@ -1,16 +1,17 @@
-<root main_tree_to_execute = "MainTree">
-    <BehaviorTree ID="MainTree">
+<root>
+    <BehaviorTree ID="CleaningTask">
         <SequenceStar name="root_sequence">
-            <Condition ID="CheckRobotStatus" />
-            <Action ID="SaveTaskToDatabase" />
-            <Action ID="DecomposeTask">
-                <InputPort name="Task" />
-                <OutputPort name="SubTasks" />
-            </Action>
-            <Action ID="DispatchTask">
-                <InputPort name="SubTasks" />
-            </Action>
-            <Action ID="NotifyCleaningResult" />
+            <CheckTaskStatus ID="CheckTask" input_keys="TaskData" output_keys="TaskStatus"/>
+            <SaveTaskToDB ID="SaveTask" input_keys="TaskData"/>
+            <DecomposeTask ID="Decompose" input_keys="TaskData" output_keys="RobotTasks"/>
+            <AssignRobots ID="Assign" input_keys="RobotTasks" output_keys="AssignedRobots"/>
+            <NotifyRobots ID="Notify" input_keys="AssignedRobots"/>
+            <WaitForCompletion ID="Wait" input_keys="AssignedRobots" output_keys="CompletedTasks"/>
+            <CheckTaskStatus ID="CheckTask" input_keys="TaskData" output_keys="TaskStatus"/>
+            <DecomposeTask ID="Decompose" input_keys="TaskData" output_keys="RobotTasks"/>
+            <AssignRobots ID="Assign" input_keys="RobotTasks" output_keys="AssignedRobots"/>
+            <NotifyRobots ID="Notify" input_keys="AssignedRobots"/>
+            <WaitForCompletion ID="Wait" input_keys="AssignedRobots" output_keys="CompletedTasks"/>
         </SequenceStar>
     </BehaviorTree>
 </root>

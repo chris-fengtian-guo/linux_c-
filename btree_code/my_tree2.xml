@@ -1,0 +1,47 @@
+<root main_tree_to_execute = "MainTree">
+    <BehaviorTree ID="MainTree">
+        <SequenceStar name="root_sequence">
+            <Condition ID="CheckRobotStatus1" />
+            <Action ID="SaveTaskToDatabase1" />
+            <Action ID="DecomposeTask1" />
+            <Action ID="DispatchTask1" />
+            <Action ID="NotifyCleaningResult1" />
+            <Action ID="SaveTaskToDatabase2" />
+            <Action ID="DecomposeTask2" />
+            <Action ID="DispatchTask2" />
+            <Action ID="NotifyCleaningResult2" />
+        </SequenceStar>
+    </BehaviorTree>
+
+    <Nodes>
+        <CheckRobotStatus ID="CheckRobotStatus1">
+            <OutputPort name="RobotStatus" />
+        </CheckRobotStatus>
+        <SaveTaskToDatabase ID="SaveTaskToDatabase1">
+            <InputPort name="Task" />
+        </SaveTaskToDatabase>
+        <DecomposeTask ID="DecomposeTask1">
+            <InputPort name="Task" />
+            <OutputPort name="SubTasks" />
+        </DecomposeTask>
+        <DispatchTask ID="DispatchTask1">
+            <InputPort name="SubTasks" />
+        </DispatchTask>
+        <NotifyCleaningResult ID="NotifyCleaningResult1">
+            <InputPort name="Result" />
+        </NotifyCleaningResult>
+        <SaveTaskToDatabase ID="SaveTaskToDatabase2">
+            <InputPort name="Task" />
+        </SaveTaskToDatabase>
+        <DecomposeTask ID="DecomposeTask2">
+            <InputPort name="Task" />
+            <OutputPort name="SubTasks" />
+        </DecomposeTask>
+        <DispatchTask ID="DispatchTask2">
+            <InputPort name="SubTasks" />
+        </DispatchTask>
+        <NotifyCleaningResult ID="NotifyCleaningResult2">
+            <InputPort name="Result" />
+        </NotifyCleaningResult>
+    </Nodes>
+</root>

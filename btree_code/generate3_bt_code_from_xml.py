@@ -75,5 +75,5 @@ def generate_cpp(nodes):
         print()
 
 if __name__ == "__main__":
-    nodes = parse_xml('my_tree.xml')
+    nodes = parse_xml('my_tree2.xml')
     generate_cpp(nodes)
