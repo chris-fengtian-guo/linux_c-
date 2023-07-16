@@ -34,26 +34,6 @@ def generate_cpp_code_from_bt_xml(bt_xml_filename, header_filename):
     # 遍历行为树结构
     for action in root.iter('Action'):
         node_id = action.attrib['ID']
-        inports, outports = node_dict.get(node_id, ([], []))
-
-        # 生成代码
-        print(f'class {node_id}(BT::SyncActionNode)')
-        print('{')
-        print('public:')
-        print(f'    {node_id}(const std::string& name, const BT::NodeConfiguration& config)')
-        print('        : BT::SyncActionNode(name, config)')
-        print('    { }')
-
-        print('    static BT::PortsList providedPorts()')
-        print('    {')
-        print('        return{')
-        for port_name in inports:
-            print(f'            {"{"}BT::InputPort<std::string>("{port_name}"){"}"},')
-        for port_name in outports:
-            print(f'            {"{"}BT::OutputPort<std::string>("{port_name}"){"}"},')
-        print('        };')
-        print('    }')
-
 
         print('    virtual BT::NodeStatus tick() override')
         print('    {')
