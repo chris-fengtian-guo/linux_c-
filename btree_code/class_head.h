@@ -1,8 +1,13 @@
-class Circle
+class DataControl
 {
-private:
-    double r;//半径
 public:
-    static catch(std::string input,  std::string input2);
-    static jump(std::string input,  std::string input2, std::string output);
+    static void SaveTaskToDatabase1(std::string input1, std::string input2);
+    static void DecomposeTask1(std::string input1, std::string input2);
+    static void DispatchTask1(std::string input1, std::string input2);
+    static void NotifyCleaningResult1(std::string input1, std::string input2);
+    static void SaveTaskToDatabase2(std::string input1, std::string input2);
+    static void DecomposeTask2(std::string input1, std::string input2);
+    static void DispatchTask2(std::string input1, std::string input2);
+    static void NotifyCleaningResult2(std::string input1, std::string input2);
+    static void CheckRobotStatus1(std::string input1, std::string input2);
 };
