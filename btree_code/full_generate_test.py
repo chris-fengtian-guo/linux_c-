@@ -78,6 +78,7 @@ def generate_cpp_code_from_bt_xml(bt_xml_filename, header_filename):
         else:
             print(f'        // No matching function found in the header file for "{node_id}"')
         print('    }')
+        print('};')
         print('\n')
 
 generate_cpp_code_from_bt_xml('my_tree2.xml', 'class_head.h')
