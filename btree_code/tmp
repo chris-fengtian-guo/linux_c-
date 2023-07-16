@@ -1,0 +1,26 @@
+def generate_cpp_code_from_bt_xml(bt_xml_filename, header_filename):
+    tree = ET.parse(bt_xml_filename)
+    root = tree.getroot()
+
+    function_list = parse_header(header_filename)
+
+    # 遍历行为树结构
+    for action in root.iter('Action'):
+        node_id = action.attrib['ID']
+
+        print('    virtual BT::NodeStatus tick() override')
+        print('    {')
+        function = [f for f in function_list if f[0] == node_id]
+        if function:
+            function_name, return_type, variables = function[0]
+            args = []
+            for type_name, var_name in variables:
+                default_value = '""' if 'string' in type_name else '0'
+                print(f'        {type_name} {var_name} = {default_value};')
+                args.append(var_name)
+            print(f'        {return_type} result = {class_name}::{function_name}({", ".join(args)});')
+            print(f'        return result == 0 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;')
+        else:
+            print(f'        // No matching function found in the header file for "{node_id}"')
+        print('    }')
+        print('\n')

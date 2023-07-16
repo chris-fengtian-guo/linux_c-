@@ -1,12 +1,25 @@
 import xml.etree.ElementTree as ET
 import re
 import sys
+
+class_name = None
+
 def parse_header(header_filename):
+    global class_name
     with open(header_filename, 'r') as file:
         data = file.read()
     print(f"Data read from file: \n{data}\n")
 
     function_list = []
+
+    # 正则表达式匹配类名
+    class_pattern = re.compile(r'class\s+(\w+)', re.MULTILINE | re.DOTALL)
+    class_match = class_pattern.search(data)
+    if class_match:
+        class_name = class_match.group(1)
+        print(f"Class name found: {class_name}\n")
+    else:
+        print("No class name found.\n")
 
     # 正则表达式匹配成员函数定义
     pattern = re.compile(r'static\s+(.*?)\s+(\w+)\s*\((.*?)\)\s*;', re.MULTILINE | re.DOTALL)
@@ -23,7 +36,6 @@ def parse_header(header_filename):
         print(f"Return type: {return_type}, Function name: {function_name}, Args: {arg_list}\n")
 
     return function_list
-
 
 def generate_cpp_code_from_bt_xml(bt_xml_filename, header_filename):
     tree = ET.parse(bt_xml_filename)
@@ -45,7 +57,8 @@ def generate_cpp_code_from_bt_xml(bt_xml_filename, header_filename):
                 default_value = '""' if 'string' in type_name else '0'
                 print(f'        {type_name} {var_name} = {default_value};')
                 args.append(var_name)
-            print(f'        {return_type} result = DataControl::{function_name}({", ".join(args)});')
+            print(f'        {return_type} result = {class_name}::{function_name}({", ".join(args)});')
+            #print(f'        {return_type} result = DataControl::{function_name}({", ".join(args)});')
             print(f'        return result == 0 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;')
         else:
             print(f'        // No matching function found in the header file for "{node_id}"')
