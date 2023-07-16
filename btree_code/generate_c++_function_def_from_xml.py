@@ -13,7 +13,7 @@ def generate_cpp_functions_from_bt_xml(bt_xml_filename):
             node_id = node.attrib['ID']
 
             # 生成函数定义
-            print(f'    static void {node_id}(std::string input1, std::string input2);')
+            print(f'    static int {node_id}(std::string input1, std::string input2);')
 
     print("};")
 
