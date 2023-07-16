@@ -1,4 +1,4 @@
-class DataControl
+class FGUO_Test_DataControl
 {
 public:
     static int SaveTaskToDatabase1(std::string input1, std::string input2);

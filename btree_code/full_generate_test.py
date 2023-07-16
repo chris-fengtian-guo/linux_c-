@@ -29,6 +29,14 @@ def generate_cpp_code_from_bt_xml(bt_xml_filename, header_filename):
     tree = ET.parse(bt_xml_filename)
     root = tree.getroot()
 
+    node_dict = {}
+    # 先解析 <Nodes> 下的所有节点
+    for node in root.find('Nodes'):
+        node_id = node.attrib['ID']
+        inports = [port.attrib['name'] for port in node.findall('InputPort')]
+        outports = [port.attrib['name'] for port in node.findall('OutputPort')]
+        node_dict[node_id] = (inports, outports)
+
     function_list = parse_header(header_filename)
 
     # 遍历行为树结构
@@ -65,7 +73,7 @@ def generate_cpp_code_from_bt_xml(bt_xml_filename, header_filename):
                 default_value = '""' if 'string' in type_name else '0'
                 print(f'        {type_name} {var_name} = {default_value};')
                 args.append(var_name)
-            print(f'        {return_type} result = DataControl::{function_name}({", ".join(args)});')
+            print(f'        {return_type} result = MyTestDataControl::{function_name}({", ".join(args)});')
             print(f'        return result == 0 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;')
         else:
             print(f'        // No matching function found in the header file for "{node_id}"')
