@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <vector> // 添加vector头文件
 
+#include "common_head.h"
 
 // 封装的函数，启动一个二进制程序并传递一个参数
 int runBinaryWithArgument(const char* binaryPath, const char* name, const char* argument) {
@@ -38,11 +39,6 @@ int runBinaryWithArgument(const char* binaryPath, const char* name, const char* 
         return -1;
     }
 }
-// 定义命令信息数据结构
-struct Command {
-    std::string action; // 动作
-    unsigned int behaviorTreeID; // 行为树ID，改为无符号整数类型
-};
 
 // 行为树路径数组
 const std::vector<std::string> behaviorTreePaths = {
