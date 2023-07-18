@@ -1,0 +1,22 @@
+#include <boost/process.hpp>
+#include <iostream>
+
+namespace bp = boost::process;
+
+int main() {
+    bp::child c("ls");  // 创建一个新的子进程，运行 "ls" 命令
+
+    // 监控进程状态
+    if (c.running()) {
+        std::cout << "The process is running." << std::endl;
+    }
+
+    c.wait();  // 等待子进程结束
+
+    // 获取进程的退出状态
+    if (!c.running()) {
+        std::cout << "The process has exited with status: " << c.exit_code() << std::endl;
+    }
+
+    return 0;
+}
