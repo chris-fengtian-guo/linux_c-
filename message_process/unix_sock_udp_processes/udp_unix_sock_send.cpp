@@ -1,21 +1,21 @@
-#include <boost/asio.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/asio.hpp>
+#include <iostream>
 #include <sstream>
 #include <string>
-#include <iostream>
 
 using boost::asio::ip::udp;
 
 const int HEADER_SIZE = 4;
 
 struct Command {
-    unsigned int action; // 动作
-    unsigned int behaviorTreeID; // 行为树ID
+    unsigned int action;
+    unsigned int behaviorTreeID;
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar & action;
-        ar & behaviorTreeID;
+        ar& action;
+        ar& behaviorTreeID;
     }
 };
 
@@ -32,11 +32,11 @@ public:
         boost::archive::text_oarchive archive(archiveStream);
         archive << cmd;
         std::string serialized_cmd = archiveStream.str();
-        
-        // include HEADER_SIZE at the beginning of the message
-        int total_length = HEADER_SIZE + serialized_cmd.size(); 
+
+        int total_length = HEADER_SIZE + serialized_cmd.size();
         std::string message = std::string(reinterpret_cast<char*>(&total_length), HEADER_SIZE) + serialized_cmd;
 
+	std::cout << "send total_lenght =" << total_length << " HEADER_SIZE=" << HEADER_SIZE << " len message=" << message.length();
         boost::system::error_code ec;
         socket_.send_to(boost::asio::buffer(message), remote_endpoint_, 0, ec);
 
@@ -45,7 +45,6 @@ public:
         } else {
             std::cerr << "Failed to send command: " << ec.message() << "\n";
         }
-
         // Start asynchronous receive for receipt from the server
         start_receive();
     }
@@ -56,10 +55,8 @@ private:
             boost::asio::buffer(recv_buffer_), remote_endpoint_,
             [this](boost::system::error_code ec, std::size_t bytes_transferred) {
                 if (!ec) {
-                    int total_length;
-                    std::memcpy(&total_length, recv_buffer_.data(), HEADER_SIZE);
-                    std::string receipt(recv_buffer_.data() + HEADER_SIZE, total_length - HEADER_SIZE);
-                    std::cout << "Receipt: " << receipt << std::endl;
+                    std::string receipt(recv_buffer_.data(), bytes_transferred);
+                    std::cout << "Receipt: " << receipt << "\n";
                 }
                 socket_.close();
             });

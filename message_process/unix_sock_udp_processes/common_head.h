@@ -29,7 +29,7 @@ struct Command {
     }
 };
 
-const int HEADER_SIZE = 4;  // 4 bytes = 32 bits
+const int HEADER_SIZE = sizeof(int);  // 4 bytes = 32 bits
 
 using boost::asio::ip::udp;
 // Define a function type for the callback
@@ -69,11 +69,12 @@ private:
                 if (!ec) {
                     if (total_size_ == 0 && bytes_transferred >= HEADER_SIZE) {
                         total_size_ = *reinterpret_cast<int*>(recv_buffer_.data());
-                        received_size_ += bytes_transferred - HEADER_SIZE;
-			std::cout << "received_size_=" << received_size_ << " total_size_=" << total_size_ << "\n";
+                        //received_size_ += bytes_transferred - HEADER_SIZE;
+			received_size_ += bytes_transferred;
+			std::cout << "received_size_=" << received_size_ << "bytes_transferred=" << bytes_transferred << " total_size_=" << total_size_ << "\n";
                     } else {
                         received_size_ += bytes_transferred;
-			std::cout << "received_size_=" << received_size_ << " total_size_=" << total_size_ << "\n";
+			std::cout << "received_size_=" << received_size_ << "bytes_transferred=" << bytes_transferred << " total_size_=" << total_size_ << "\n";
                     }
 
                     if (received_size_ >= total_size_) {
