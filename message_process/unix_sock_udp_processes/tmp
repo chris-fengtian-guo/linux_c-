@@ -1,0 +1,8 @@
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
+if (receipt_mode_) {
+    this->send_receipt();
+} else {
+    socket_.close();
+}
