@@ -1,8 +1,59 @@
-#include <boost/archive/text_iarchive.hpp>
+#include <boost/asio.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <iostream>
+#include <sstream>
 
-if (receipt_mode_) {
-    this->send_receipt();
-} else {
-    socket_.close();
+using boost::asio::ip::udp;
+
+struct Command {
+    unsigned int action;
+    unsigned int behaviorTreeID;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+        ar & action;
+        ar & behaviorTreeID;
+    }
+};
+
+class UDPServer {
+public:
+    UDPServer(boost::asio::io_service& io_service, short port)
+        : socket_(io_service, udp::endpoint(udp::v4(), port)) {
+        start_receive();
+    }
+
+    void send_data(const Command& cmd) {
+        std::ostringstream archiveStream;
+        boost::archive::text_oarchive archive(archiveStream);
+        archive << cmd;
+        std::string message = archiveStream.str();
+
+        socket_.async_send_to(
+            boost::asio::buffer(message), remote_endpoint_,
+            [this](boost::system::error_code ec, std::size_t bytes_transferred) {
+                if (!ec) {
+                    std::cout << "Sent data successfully\n";
+                } else {
+                    std::cerr << "Failed to send data: " << ec.message() << "\n";
+                }
+            });
+    }
+
+private:
+    // ... (existing code) ...
+
+    udp::socket socket_;
+    udp::endpoint remote_endpoint_;
+    std::array<char, 65536> recv_buffer_;
+};
+
+int main(int argc, char* argv[]) {
+    // ... (existing code) ...
+    Command cmd = {1, 100};
+    server.send_data(cmd);
+    // ... (existing code) ...
 }
