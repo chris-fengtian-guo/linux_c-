@@ -43,19 +43,24 @@ public:
         start_receive();
     }
     void send_data(const Command& cmd) {
-    std::ostringstream archiveStream;
-    boost::archive::text_oarchive archive(archiveStream);
-    archive << cmd;
-    std::string message = archiveStream.str();
+        std::ostringstream archiveStream;
+        boost::archive::text_oarchive archive(archiveStream);
+        archive << cmd;
+        std::string serialized_cmd = archiveStream.str();
 
-    boost::system::error_code ec;
-    socket_.send_to(boost::asio::buffer(message), remote_endpoint_, 0, ec);
-    if (!ec) {
-        std::cout << "Sent data successfully\n";
-    } else {
-        std::cerr << "Failed to send data: " << ec.message() << "\n";
+        int total_length = HEADER_SIZE + serialized_cmd.size();
+        std::string message = std::string(reinterpret_cast<char*>(&total_length), HEADER_SIZE) + serialized_cmd;
+
+        boost::system::error_code ec;
+        socket_.send_to(boost::asio::buffer(message), remote_endpoint_, 0, ec);
+
+        if (!ec) {
+            std::cout << "Sent data successfully\n";
+        } else {
+            std::cerr << "Failed to send data: " << ec.message() << "\n";
+        }
     }
-    }
+
 private:
     void start_receive() {
         socket_.async_receive_from(
