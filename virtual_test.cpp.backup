@@ -1,0 +1,51 @@
+class Base {
+public:
+	virtual void print() {
+		std::count << "This is Base class print func" << std::endl;
+	}
+};
+class Derived: public Base {
+public:
+	void print() overide {
+		std::count << "This is derived class print func" << std::endl;
+	}		
+};
+class AbstractBase {
+public:
+  virtual void pureVirtualFunc() = 0;  // Pure virtual function
+};
+
+class ConcreteClass: public AbstractBase {
+public:
+  void pureVirtualFunc() override {
+    std::cout << "Implemented pure virtual function." << std::endl;
+  }
+};
+
+void mytest(void) {
+	std::unique_ptr<int> ptr(new int(10));
+	ptr[0] = 0x1234;
+
+}
+void test2(void) {
+	std::shared_ptr<int> ptr1(new int(20));
+	{
+		std::shared_ptr<int> ptr2 = ptr1;
+	}
+}
+std::shared_ptr<int> ptr(new int(30));
+std::weak_ptr<int> weak_ptr = ptr;
+
+/*1 并发和并行的区别
+1 并发是同一个CPU单核，多线程前后启动，切换运行
+2 并行是多个CPU，多核。 多线程同时在多核上同一时间运行
+*/
+int factor = 5;
+auto multiply_by_factor = [factor](int num) {return num * factor;};
+std::cout << multiply_by_factor(2);
+int factor = 5;
+auto multiply_by_factor = [factor](int num) { return num * factor; };
+std::cout << multiply_by_factor(2);  // Outputs: 10
+
+void main() {
+}

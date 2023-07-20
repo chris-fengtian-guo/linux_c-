@@ -23,6 +23,9 @@ void handle_send(const boost::system::error_code& error, std::size_t bytes_trans
     if (!error && total_read < total_length) {
         sequence_number++;
 
+        std::cout << "Sequence number: " << sequence_number << "\n";
+        std::cout << "Total read: " << total_read << " / " << total_length << "\n";
+
         // Add sequence number to the buffer.
         std::memcpy(buffer.data(), &sequence_number, sizeof(sequence_number));
 
@@ -55,6 +58,8 @@ void send_file(udp::socket& socket, udp::endpoint& endpoint, const std::string& 
     std::streamsize total_length = file.tellg();
     file.seekg(0, file.beg);
 
+    std::cout << "File size: " << total_length << "\n";
+
     uint32_t sequence_number = 0;
     std::streamsize total_read = 0;
 
@@ -68,13 +73,13 @@ void send_file(udp::socket& socket, udp::endpoint& endpoint, const std::string& 
     std::streamsize data_read = file.gcount();
     total_read += data_read;
 
+    std::cout << "Reading file: " << data_read << " bytes read.\n";
+
     if (total_read < total_length) {
         socket.async_send_to(boost::asio::buffer(buffer.data(), sizeof(sequence_number) + data_read), endpoint,
             std::bind(handle_send, std::placeholders::_1, std::placeholders::_2, std::ref(file), total_read, total_length, sequence_number, std::ref(socket), std::ref(endpoint), std::ref(buffer)));
     }
 }
-
-/////
 
 int main() {
     try {

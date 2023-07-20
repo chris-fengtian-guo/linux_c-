@@ -5,11 +5,7 @@
 #include <iostream>
 
 #define UNIX_SRV_PATH "/tmp/unix_sock_server"
-
-struct Command {
-    unsigned int action;
-    unsigned int behaviorTreeID;
-};
+#include "common_head.h"
 
 class UnixSockClient {
 public:

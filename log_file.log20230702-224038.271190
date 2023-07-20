@@ -1,0 +1,6 @@
+Log file created at: 2023/07/02 22:40:38
+Running on machine: autodl-container-70e411b138-3edbeae6
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0702 22:40:38.035987 271190 google_log.cpp:11] This is an INFO log
+W0702 22:40:38.068605 271190 google_log.cpp:12] This is a WARNING log
+E0702 22:40:38.068807 271190 google_log.cpp:13] This is an ERROR log
