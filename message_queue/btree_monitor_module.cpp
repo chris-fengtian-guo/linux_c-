@@ -28,34 +28,28 @@ struct BtTaskStatus {
 class BtTaskManager {
 public:
     BtTaskManager() : next_task_uuid_(0) {}
-
     unsigned int addTask(unsigned int bt_id, std::function<void()> task_func) {
-        std::unique_lock<std::mutex> lock(tasks_mutex_);
-
-        BtTaskStatus status;
-        status.task_uuid = next_task_uuid_;
-        status.bt_id = bt_id;
-        status.status = NOT_RUNNING;
-        
-        std::thread task_thread([this, task_func, task_uuid = status.task_uuid]() {
-            {
-                std::unique_lock<std::mutex> lock(tasks_mutex_);
-                task_added_cv_.wait(lock, [this, task_uuid]() { 
-                    return tasks_.find(task_uuid) != tasks_.end(); 
-                });
-            }
-            task_func();
-        });
-        
-        status.thread_id = task_thread.get_id();
-        threads_[status.task_uuid] = std::move(task_thread);
-        tasks_[status.task_uuid] = status;
-        
-        task_added_cv_.notify_all();
-        
-        return next_task_uuid_++;
+    BtTaskStatus status;
+    status.task_uuid = next_task_uuid_;
+    status.bt_id = bt_id;
+    status.status = RUNNING;
+    {
+        std::lock_guard<std::mutex> lock(tasks_mutex_);
+        tasks_[next_task_uuid_] = status;
     }
-   
+    unsigned int task_uuid = status.task_uuid;
+    std::thread task_thread([this, task_func, task_uuid]() mutable {
+        task_func();
+        updateTaskStatus(task_uuid, FINISHED);
+    });
+    {
+        std::lock_guard<std::mutex> lock(tasks_mutex_);
+        tasks_[task_uuid].thread_id = task_thread.get_id();
+    }
+    task_thread.detach();
+    return next_task_uuid_++;
+    }
+       
     BtTaskStatus getTaskStatus(unsigned int task_uuid) {
         std::lock_guard<std::mutex> lock(tasks_mutex_);
         if(tasks_.find(task_uuid) != tasks_.end()) {
