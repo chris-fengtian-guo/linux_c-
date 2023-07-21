@@ -1,0 +1,11 @@
+void btree_execute(BtTaskManager &manager, unsigned int task_uuid, unsigned int bt_id) {
+    try {
+        // Here is where you would add the actual execution of the behavior tree
+        std::cout << "Executing behavior tree with id: " << bt_id << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        manager.updateTaskStatus(task_uuid, FINISHED);
+    } catch (...) {
+        // If an error occurs, update the status to ERROR
+        manager.updateTaskStatus(task_uuid, ERROR);
+    }
+}

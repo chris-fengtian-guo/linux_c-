@@ -8,14 +8,15 @@
 enum BT_STATUS {
     NOT_RUNNING,
     RUNNING,
-    FINISHED
+    FINISHED,
+    ERROR
 };
 
 struct BtTaskStatus {
     unsigned int task_uuid;
+    unsigned int bt_id;
     std::thread::id thread_id;
     BT_STATUS status;
-    unsigned int bt_id;
 };
 
 class BtTaskManager {
@@ -28,8 +29,12 @@ public:
         status.task_uuid = next_task_uuid_;
         status.bt_id = bt_id;
         status.status = RUNNING;
-        status.thread_id = std::thread(task_func).get_id();
+        std::thread new_thread(task_func);
+        status.thread_id = new_thread.get_id();
         tasks_[next_task_uuid_] = status;
+        threads_[next_task_uuid_] = std::move(new_thread);
+        threads_[next_task_uuid_].detach();
+	std::cout << "addTask bt_id =" << bt_id << "uuid=" << next_task_uuid_ << "\n"; 
         return next_task_uuid_++;
     }
 
@@ -45,6 +50,7 @@ public:
         std::lock_guard<std::mutex> lock(tasks_mutex_);
         if(tasks_.find(task_uuid) != tasks_.end()) {
             tasks_.erase(task_uuid);
+            threads_.erase(task_uuid);
         } else {
             throw std::invalid_argument("Invalid task uuid");
         }
@@ -62,20 +68,27 @@ public:
 private:
     unsigned int next_task_uuid_;
     std::map<unsigned int, BtTaskStatus> tasks_;
+    std::map<unsigned int, std::thread> threads_;
     std::mutex tasks_mutex_;
 };
 
-void btree_execute(BtTaskManager &manager, unsigned int bt_id) {
-    // Here is where you would add the actual execution of the behavior tree
-    std::cout << "Executing behavior tree with id: " << bt_id << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+void btree_execute(BtTaskManager &manager, unsigned int task_uuid, unsigned int bt_id) {
+    try {
+        // Here is where you would add the actual execution of the behavior tree
+        std::cout << "Executing behavior tree with id: " << bt_id << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        manager.updateTaskStatus(task_uuid, FINISHED);
+    } catch (...) {
+        // If an error occurs, update the status to ERROR
+        manager.updateTaskStatus(task_uuid, ERROR);
+    }
 }
 
 int main() {
     BtTaskManager manager;
 
     // Add a new task
-    unsigned int task_uuid = manager.addTask(1, [&]() { btree_execute(manager, 1); });
+    unsigned int task_uuid = manager.addTask(1, [&]() { btree_execute(manager, 1, 10); });
 
     // Get task status
     BtTaskStatus status = manager.getTaskStatus(task_uuid);
@@ -89,6 +102,6 @@ int main() {
               << (status.status == FINISHED ? "finished" : "not finished") << std::endl;
 
     manager.removeTask(task_uuid);
-    
+
     return 0;
 }
