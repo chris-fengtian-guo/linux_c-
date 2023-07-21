@@ -55,7 +55,9 @@ public:
         if(tasks_.find(task_uuid) != tasks_.end()) {
             return tasks_[task_uuid];
         }
-        throw std::invalid_argument("Invalid task uuid");
+	std::cerr << "Invalid task uuid" << std::endl;
+	return BtTaskStatus();
+        //throw std::invalid_argument("Invalid task uuid");
     }
 
     void removeTask(unsigned int task_uuid) {
@@ -64,7 +66,8 @@ public:
             tasks_.erase(task_uuid);
             threads_.erase(task_uuid);
         } else {
-            throw std::invalid_argument("Invalid task uuid");
+	    std::cerr << "Invalid task uuid" << std::endl;
+            //throw std::invalid_argument("Invalid task uuid");
         }
     }
 
@@ -73,7 +76,8 @@ public:
         if(tasks_.find(task_uuid) != tasks_.end()) {
             tasks_[task_uuid].status = new_status;
         } else {
-            throw std::invalid_argument("Invalid task uuid");
+	    std::cerr << "Invalid task uuid" << std::endl;
+            //throw std::invalid_argument("Invalid task uuid");
         }
     }
 private:
