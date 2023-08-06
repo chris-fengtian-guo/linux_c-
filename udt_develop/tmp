@@ -1,0 +1,14 @@
+int read;
+while (true) {
+    read = UDT::recv(recver, buffer, sizeof(buffer), 0);
+    if (read == 0) {
+        std::cout << "File transfer completed. Connection closed by sender.\n";
+        break;
+    }
+    if (read < 0) {
+        std::cerr << "recv: " << UDT::getlasterror().getErrorMessage() << std::endl;
+        break;
+    }
+    ofs.write(buffer, read);
+    std::cout << "Received " << read << " bytes\n";
+}

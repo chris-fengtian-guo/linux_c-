@@ -1,0 +1,1 @@
+/usr/bin/c++  -std=c++11 -rdynamic CMakeFiles/receive_file.dir/receive_file.cpp.o -o receive_file   -L/root/autodl-tmp/linux_c++/udt_develop/lib  -Wl,-rpath,/root/autodl-tmp/linux_c++/udt_develop/lib -ludt -lpthread -lm 
