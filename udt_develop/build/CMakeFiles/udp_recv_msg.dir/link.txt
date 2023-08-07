@@ -1,0 +1,1 @@
+/usr/bin/c++  -std=c++11 -rdynamic CMakeFiles/udp_recv_msg.dir/udp_recv_msg.cpp.o -o udp_recv_msg   -L/root/autodl-tmp/linux_c++/udt_develop/lib  -Wl,-rpath,/root/autodl-tmp/linux_c++/udt_develop/lib -ludt -lpthread -lm 

@@ -15,3 +15,9 @@ add_executable(receive_file receive_file.cpp)
 
 target_link_libraries(send_file udt pthread m)
 target_link_libraries(receive_file udt pthread m)
+
+add_executable(udp_send_msg udp_send_msg.cpp)
+add_executable(udp_recv_msg udp_recv_msg.cpp)
+
+target_link_libraries(udp_send_msg udt pthread m)
+target_link_libraries(udp_recv_msg udt pthread m)

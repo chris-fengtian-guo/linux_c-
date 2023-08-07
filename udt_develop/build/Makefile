@@ -142,6 +142,32 @@ receive_file/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/receive_file.dir/build.make CMakeFiles/receive_file.dir/build
 .PHONY : receive_file/fast
 
+#=============================================================================
+# Target rules for targets named udp_send_msg
+
+# Build rule for target.
+udp_send_msg: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 udp_send_msg
+.PHONY : udp_send_msg
+
+# fast build rule for target.
+udp_send_msg/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/udp_send_msg.dir/build.make CMakeFiles/udp_send_msg.dir/build
+.PHONY : udp_send_msg/fast
+
+#=============================================================================
+# Target rules for targets named udp_recv_msg
+
+# Build rule for target.
+udp_recv_msg: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 udp_recv_msg
+.PHONY : udp_recv_msg
+
+# fast build rule for target.
+udp_recv_msg/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/udp_recv_msg.dir/build.make CMakeFiles/udp_recv_msg.dir/build
+.PHONY : udp_recv_msg/fast
+
 receive_file.o: receive_file.cpp.o
 .PHONY : receive_file.o
 
@@ -190,6 +216,54 @@ send_file.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/send_file.dir/build.make CMakeFiles/send_file.dir/send_file.cpp.s
 .PHONY : send_file.cpp.s
 
+udp_recv_msg.o: udp_recv_msg.cpp.o
+.PHONY : udp_recv_msg.o
+
+# target to build an object file
+udp_recv_msg.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/udp_recv_msg.dir/build.make CMakeFiles/udp_recv_msg.dir/udp_recv_msg.cpp.o
+.PHONY : udp_recv_msg.cpp.o
+
+udp_recv_msg.i: udp_recv_msg.cpp.i
+.PHONY : udp_recv_msg.i
+
+# target to preprocess a source file
+udp_recv_msg.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/udp_recv_msg.dir/build.make CMakeFiles/udp_recv_msg.dir/udp_recv_msg.cpp.i
+.PHONY : udp_recv_msg.cpp.i
+
+udp_recv_msg.s: udp_recv_msg.cpp.s
+.PHONY : udp_recv_msg.s
+
+# target to generate assembly for a file
+udp_recv_msg.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/udp_recv_msg.dir/build.make CMakeFiles/udp_recv_msg.dir/udp_recv_msg.cpp.s
+.PHONY : udp_recv_msg.cpp.s
+
+udp_send_msg.o: udp_send_msg.cpp.o
+.PHONY : udp_send_msg.o
+
+# target to build an object file
+udp_send_msg.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/udp_send_msg.dir/build.make CMakeFiles/udp_send_msg.dir/udp_send_msg.cpp.o
+.PHONY : udp_send_msg.cpp.o
+
+udp_send_msg.i: udp_send_msg.cpp.i
+.PHONY : udp_send_msg.i
+
+# target to preprocess a source file
+udp_send_msg.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/udp_send_msg.dir/build.make CMakeFiles/udp_send_msg.dir/udp_send_msg.cpp.i
+.PHONY : udp_send_msg.cpp.i
+
+udp_send_msg.s: udp_send_msg.cpp.s
+.PHONY : udp_send_msg.s
+
+# target to generate assembly for a file
+udp_send_msg.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/udp_send_msg.dir/build.make CMakeFiles/udp_send_msg.dir/udp_send_msg.cpp.s
+.PHONY : udp_send_msg.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -200,12 +274,20 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... receive_file"
 	@echo "... send_file"
+	@echo "... udp_recv_msg"
+	@echo "... udp_send_msg"
 	@echo "... receive_file.o"
 	@echo "... receive_file.i"
 	@echo "... receive_file.s"
 	@echo "... send_file.o"
 	@echo "... send_file.i"
 	@echo "... send_file.s"
+	@echo "... udp_recv_msg.o"
+	@echo "... udp_recv_msg.i"
+	@echo "... udp_recv_msg.s"
+	@echo "... udp_send_msg.o"
+	@echo "... udp_send_msg.i"
+	@echo "... udp_send_msg.s"
 .PHONY : help
 
 

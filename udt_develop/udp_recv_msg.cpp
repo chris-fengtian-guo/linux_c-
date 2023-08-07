@@ -1,49 +1,60 @@
 #include <iostream>
 #include <udt.h>
 #include <cstdlib>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <string.h>
 
-int main() {
-    // 初始化 UDT 库
-    UDT::startup();
+
+void receive_msg(int port) {
+    std::cout << "Creating UDT socket for receiving..." << std::endl;
+    UDTSOCKET serv = UDT::socket(AF_INET, SOCK_DGRAM, 0);
 
     sockaddr_in my_addr;
     my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(9000);
+    my_addr.sin_port = htons(port);
     my_addr.sin_addr.s_addr = INADDR_ANY;
+    memset(&(my_addr.sin_zero), '\0', 8);
 
-    // 创建 socket
-    UDTSOCKET serv = UDT::socket(AF_INET, SOCK_DGRAM, 0);
-
-    // 绑定地址
+    std::cout << "Binding to port " << port << "..." << std::endl;
     if (UDT::ERROR == UDT::bind(serv, (sockaddr*)&my_addr, sizeof(my_addr))) {
         std::cerr << "bind: " << UDT::getlasterror().getErrorMessage();
-        return 1;
+        return;
     }
 
-    // 监听连接
-    if (UDT::ERROR == UDT::listen(serv, 10)) {
-        std::cerr << "listen: " << UDT::getlasterror().getErrorMessage();
-        return 1;
-    }
+    UDT::listen(serv, 10);
+    std::cout << "Listening for connections..." << std::endl;
 
     sockaddr_in client_addr;
     int addrlen = sizeof(client_addr);
 
     UDTSOCKET recver = UDT::accept(serv, (sockaddr*)&client_addr, &addrlen);
+    std::cout << "Connection request received!" << std::endl;
 
-    char buffer[1024];
-    int r = UDT::recvmsg(recver, buffer, sizeof(buffer));
+    char client_ip[16];
+    inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(client_ip));
+    std::cout << "New connection from " << client_ip << ":" << ntohs(client_addr.sin_port) << std::endl;
 
+    char* msg = new char[100];
+    std::cout << "Waiting to receive a message..." << std::endl;
+    int r = UDT::recvmsg(recver, msg, 100);
     if (r < 0) {
         std::cerr << "recvmsg: " << UDT::getlasterror().getErrorMessage();
-        return 1;
+        delete[] msg;
+        return;
     }
 
-    std::cout << "Received message: " << buffer << std::endl;
+    std::cout << "Received message: " << msg << std::endl;
 
-    // 关闭连接
+    delete[] msg;
     UDT::close(recver);
-    UDT::cleanup();
+    UDT::close(serv);
+    std::cout << "Connection closed." << std::endl;
+}
 
+int main() {
+    // Test receiving a message
+    receive_msg(9000);
     return 0;
 }

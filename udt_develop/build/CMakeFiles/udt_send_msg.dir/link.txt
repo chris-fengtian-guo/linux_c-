@@ -1,0 +1,1 @@
+/usr/bin/c++  -std=c++11 -rdynamic CMakeFiles/udt_send_msg.dir/udt_send_msg.cpp.o -o udt_send_msg   -L/root/autodl-tmp/linux_c++/udt_develop/lib  -Wl,-rpath,/root/autodl-tmp/linux_c++/udt_develop/lib -ludt -lpthread -lm 

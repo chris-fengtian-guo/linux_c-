@@ -1,4 +1,6 @@
 /root/autodl-tmp/linux_c++/udt_develop/build/CMakeFiles/send_file.dir
 /root/autodl-tmp/linux_c++/udt_develop/build/CMakeFiles/receive_file.dir
+/root/autodl-tmp/linux_c++/udt_develop/build/CMakeFiles/udp_send_msg.dir
+/root/autodl-tmp/linux_c++/udt_develop/build/CMakeFiles/udp_recv_msg.dir
 /root/autodl-tmp/linux_c++/udt_develop/build/CMakeFiles/edit_cache.dir
 /root/autodl-tmp/linux_c++/udt_develop/build/CMakeFiles/rebuild_cache.dir
