@@ -54,7 +54,7 @@ void receive_msg(int port) {
 }
 
 int main() {
-    // Test receiving a message
+    
     receive_msg(9000);
     return 0;
 }

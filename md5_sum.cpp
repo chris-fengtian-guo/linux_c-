@@ -49,30 +49,30 @@ std::string get_md5_hash(const std::string& file_name) {
     return sout.str();
 }
 void start_sending(boost::asio::ip::tcp::socket& socket, const std::string& file_name) {
-//void start_sending(tcp::socket& socket, const std::string& file_name) {
+
     std::string md5_hash = get_md5_hash(file_name);
     std::string file_size = get_file_size(file_name);
 
-    // Assume the hash and the size are sent in the format "hash|size\n"
+    
     std::string hash_and_size = md5_hash + "|" + file_size + "\n";
 
     boost::asio::write(socket, boost::asio::buffer(hash_and_size));
 
-    // Proceed with sending the file.
-    // ...
+    
+    
 }
 int main() {
-    // 创建 Boost.Asio io_context 对象
+    
     boost::asio::io_context io_context;
 
-    // 创建 socket 对象
+    
     boost::asio::ip::tcp::socket socket(io_context);
 
-    // 连接到服务器
-    //boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::make_address("服务器IP地址"), 服务器端口号);
+    
+    
     socket.connect(endpoint);
 
-    // 调用 start_sending 函数
+    
     std::string file_name = "文件名";
     start_sending(socket, file_name);
 

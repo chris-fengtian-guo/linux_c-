@@ -18,8 +18,8 @@
 #include <boost/serialization/access.hpp>
 
 struct Command {
-    unsigned int action; // 动作
-    unsigned int behaviorTreeID; // 行为树ID
+    unsigned int action; 
+    unsigned int behaviorTreeID; 
 
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
@@ -29,10 +29,10 @@ struct Command {
     }
 };
 
-const int HEADER_SIZE = sizeof(int);  // 4 bytes = 32 bits
+const int HEADER_SIZE = sizeof(int);  
 
 using boost::asio::ip::udp;
-// Define a function type for the callback
+
 using DataReceivedCallback = std::function<void(const Command&)>;
 
 class UDPServer {
@@ -69,7 +69,7 @@ private:
                 if (!ec) {
                     if (total_size_ == 0 && bytes_transferred >= HEADER_SIZE) {
                         total_size_ = *reinterpret_cast<int*>(recv_buffer_.data());
-                        //received_size_ += bytes_transferred - HEADER_SIZE;
+                        
 			received_size_ += bytes_transferred;
 			std::cout << "received_size_=" << received_size_ << "bytes_transferred=" << bytes_transferred << " total_size_=" << total_size_ << "\n";
                     } else {
@@ -83,7 +83,7 @@ private:
                         Command cmd;
                         archive >> cmd;
 			std::cout << "received_size_=" << received_size_ << " total_size_=" << total_size_ << "\n";
-                        // Call the callback if it is set
+                        
                         if (callback_) {
                             callback_(cmd);
                         }
@@ -100,24 +100,24 @@ private:
             });
     }
 
-    // send_receipt() stays the same ...
+    
     void send_receipt() {
         std::string receipt = "Received: " + std::to_string(received_size_) + " Sent: " + std::to_string(total_size_);
 	std::cout << "send receipt =" << receipt << "\n";
         socket_.async_send_to(
             boost::asio::buffer(receipt), remote_endpoint_,
-            [this](boost::system::error_code /*ec*/, std::size_t /*bytes_transferred*/) {
+            [this](boost::system::error_code ) {
                 socket_.close();
             });
     }
 
     udp::socket socket_;
     udp::endpoint remote_endpoint_;
-    std::array<char, 65536> recv_buffer_;  // max UDP size
+    std::array<char, 65536> recv_buffer_;  
     int total_size_;
     int received_size_;
     bool receipt_mode_;
-    DataReceivedCallback callback_;  // Add a callback for data received
+    DataReceivedCallback callback_;  
 };
 
 
@@ -154,7 +154,7 @@ public:
         } else {
             std::cerr << "Failed to send command: " << ec.message() << "\n";
         }
-        // Start asynchronous receive for receipt from the server
+        
         start_receive();
     }
 
@@ -177,4 +177,4 @@ private:
     udp::resolver resolver_;
 };
 
-#endif // COMMAND_H
+#endif 

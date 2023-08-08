@@ -35,7 +35,7 @@ private:
 int main() {
     MessageQueue queue;
 
-    // Data management thread
+    
     std::thread producer([&]() {
         for (unsigned int i = 0; i < 10; ++i) {
             Message message{i, "request_" + std::to_string(i)};
@@ -45,7 +45,7 @@ int main() {
         }
     });
 
-    // Behavior tree scheduling thread
+    
     std::thread consumer([&]() {
         for (unsigned int i = 0; i < 10; ++i) {
             Message message = queue.pop();

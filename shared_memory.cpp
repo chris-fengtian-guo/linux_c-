@@ -1,6 +1,6 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-#include <algorithm> // for std::count_if
+#include <algorithm> 
 #include <iostream>
 
 int main()

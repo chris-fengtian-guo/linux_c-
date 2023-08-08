@@ -11,7 +11,7 @@ void start_sending(tcp::socket& socket, const std::string& file_name) {
         return;
     }
 
-    // Get file size.
+    
     file.seekg(0, std::ios::end);
     size_t file_size = file.tellg();
     file.seekg(0, std::ios::beg);
@@ -19,7 +19,7 @@ void start_sending(tcp::socket& socket, const std::string& file_name) {
     boost::asio::streambuf buf;
     std::ostream out_stream(&buf);
     out_stream << file.rdbuf();
-    // Synchronous write for simplicity.
+    
     boost::asio::write(socket, buf);
 }
 
@@ -30,7 +30,7 @@ int main() {
         for (;;) {
             tcp::socket socket(io_service);
             acceptor.accept(socket);
-            start_sending(socket, "file_to_send.txt");  // Put your file path here.
+            start_sending(socket, "file_to_send.txt");  
         }
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";

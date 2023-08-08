@@ -19,7 +19,7 @@ private:
     int port_;
 };
 
-#endif // UDP_COMMUNICATOR_H
+#endif 
 
 
 #ifndef COMMAND_DISPATCHER_H
@@ -40,7 +40,7 @@ private:
     std::map<std::string, CommandHandler> commandHandlers_;
 };
 
-#endif // COMMAND_DISPATCHER_H
+#endif 
 
 #ifndef BEHAVIOR_NODE_H
 #define BEHAVIOR_NODE_H
@@ -51,7 +51,7 @@ public:
     virtual bool execute() = 0;
 };
 
-#endif // BEHAVIOR_NODE_H
+#endif 
 
 #ifndef EXCEPTION_HANDLER_H
 #define EXCEPTION_HANDLER_H
@@ -61,7 +61,7 @@ public:
     void handleException(const std::exception& ex);
 };
 
-#endif // EXCEPTION_HANDLER_H
+#endif 
 
 #ifndef PLUGIN_INTERFACE_H
 #define PLUGIN_INTERFACE_H
@@ -72,7 +72,7 @@ public:
     virtual void execute() = 0;
 };
 
-#endif // PLUGIN_INTERFACE_H
+#endif 
 
 
 #ifndef PLUGIN_MANAGER_H
@@ -91,7 +91,7 @@ private:
     std::map<std::string, PluginInterface*> plugins_;
 };
 
-#endif // PLUGIN_MANAGER_H
+#endif 
 
 
 #ifndef EVENT_DISPATCHER_H
@@ -112,7 +112,7 @@ private:
     std::map<std::string, EventHandler> eventHandlers_;
 };
 
-#endif // EVENT_DISPATCHER_H
+#endif 
 
 
 #ifndef CONFIG_MANAGER_H
@@ -130,7 +130,7 @@ private:
     std::map<std::string, std::string> configs_;
 };
 
-#endif // CONFIG_MANAGER_H
+#endif 
 
 #ifndef UDP_COMMUNICATOR_H
 #define UDP_COMMUNICATOR_H
@@ -151,7 +151,7 @@ private:
     int port_;
 };
 
-#endif // UDP_COMMUNICATOR_H
+#endif 
 #ifndef DATA_MANAGER_H
 #define DATA_MANAGER_H
 
@@ -168,7 +168,7 @@ private:
     std::map<std::string, std::string> memoryCache_;
 };
 
-#endif // DATA_MANAGER_H
+#endif 
 
 
 #ifndef BEHAVIOR_TREE_H
@@ -188,7 +188,7 @@ private:
     BehaviorNode* root_;
 };
 
-#endif // BEHAVIOR_TREE_H
+#endif 
 
 #ifndef DEVICE_STATUS_MANAGER_H
 #define DEVICE_STATUS_MANAGER_H
@@ -208,7 +208,7 @@ private:
     std::map<std::string, DeviceStatus> statusMap_;
 };
 
-#endif // DEVICE_STATUS_MANAGER_H
+#endif 
 
 
 #ifndef UDP_COMMUNICATOR_H
@@ -233,7 +233,7 @@ private:
     void handleReceive(const std::string& data);
 };
 
-#endif // UDP_COMMUNICATOR_H
+#endif 
 
 #ifndef DATA_CODEC_H
 #define DATA_CODEC_H
@@ -255,7 +255,7 @@ public:
 };
 
 
-#endif // DATA_CODEC_H
+#endif 
 
 
 #ifndef MESSAGE_QUEUE_H
@@ -277,7 +277,7 @@ private:
     std::condition_variable cv_;
 };
 
-#endif // MESSAGE_QUEUE_H
+#endif 
 
 #ifndef TIMEOUT_MANAGER_H
 #define TIMEOUT_MANAGER_H
@@ -292,7 +292,7 @@ public:
     void setTimeout(TimeoutCallback callback, std::chrono::milliseconds duration);
 };
 
-#endif // TIMEOUT_MANAGER_H
+#endif 
 
 
 #ifndef COMMAND_CODEC_H
@@ -316,7 +316,7 @@ public:
     std::string decode(const std::string& encodedCommand) override;
 };
 
-#endif // COMMAND_CODEC_H
+#endif 
 
 #ifndef EVENT_DISPATCHER_H
 #define EVENT_DISPATCHER_H
@@ -336,7 +336,7 @@ private:
     std::unordered_map<std::string, EventHandler> eventHandlers_;
 };
 
-#endif // EVENT_DISPATCHER_H
+#endif 
 
 #ifndef UDP_COMMUNICATOR_H
 #define UDP_COMMUNICATOR_H
@@ -355,7 +355,7 @@ private:
     EventDispatcher& dispatcher_;
 };
 
-#endif // UDP_COMMUNICATOR_H
+#endif 
 
 
 #ifndef BEHAVIOR_TREE_CONTROLLER_H
@@ -368,7 +368,7 @@ public:
     BehaviorTreeController(EventDispatcher& dispatcher);
 };
 
-#endif // BEHAVIOR_TREE_CONTROLLER_H
+#endif 
 
 
 #include "UDPCommunicator.h"
@@ -400,7 +400,7 @@ public:
     virtual void handleData(const std::string& data) = 0;
 };
 
-#endif // PLUGIN_INTERFACE_H
+#endif 
 
 
 #ifndef PLUGIN_MANAGER_H
@@ -422,7 +422,7 @@ private:
     std::map<std::string, void*> pluginHandles_;
 };
 
-#endif // PLUGIN_MANAGER_H
+#endif 
 
 
 #include "PluginManager.h"
@@ -946,7 +946,7 @@ public:
 
     void executeTask(const Task& task) {
         
-        while(!shouldStop_ /* some condition */) {
+        while(!shouldStop_ ) {
 
         }
     }

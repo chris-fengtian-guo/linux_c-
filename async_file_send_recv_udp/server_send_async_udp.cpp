@@ -9,7 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <iomanip>  // add this
+#include <iomanip>  
 #include <boost/asio.hpp>
 #include <openssl/md5.h>
 
@@ -26,10 +26,10 @@ void handle_send(const boost::system::error_code& error, std::size_t bytes_trans
         std::cout << "Sequence number: " << sequence_number << "\n";
         std::cout << "Total read: " << total_read << " / " << total_length << "\n";
 
-        // Add sequence number to the buffer.
+        
         std::memcpy(buffer.data(), &sequence_number, sizeof(sequence_number));
 
-        // Read file data into the buffer, after the sequence number.
+        
         file.read(buffer.data() + sizeof(sequence_number), buffer.size() - sizeof(sequence_number));
         std::streamsize data_read = file.gcount();
         total_read += data_read;
@@ -53,7 +53,7 @@ void send_file(udp::socket& socket, udp::endpoint& endpoint, const std::string& 
         return;
     }
 
-    // Get the file length
+    
     file.seekg(0, file.end);
     std::streamsize total_length = file.tellg();
     file.seekg(0, file.beg);
@@ -65,10 +65,10 @@ void send_file(udp::socket& socket, udp::endpoint& endpoint, const std::string& 
 
     std::vector<char> buffer(1024 + sizeof(sequence_number));
 
-    // Add sequence number to the buffer.
+    
     std::memcpy(buffer.data(), &sequence_number, sizeof(sequence_number));
 
-    // Read file data into the buffer, after the sequence number.
+    
     file.read(buffer.data() + sizeof(sequence_number), buffer.size() - sizeof(sequence_number));
     std::streamsize data_read = file.gcount();
     total_read += data_read;

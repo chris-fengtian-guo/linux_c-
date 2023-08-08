@@ -57,7 +57,7 @@ public:
         }
 	std::cerr << "Invalid task uuid" << std::endl;
 	return BtTaskStatus();
-        //throw std::invalid_argument("Invalid task uuid");
+        
     }
 
     void removeTask(unsigned int task_uuid) {
@@ -67,7 +67,7 @@ public:
             threads_.erase(task_uuid);
         } else {
 	    std::cerr << "Invalid task uuid" << std::endl;
-            //throw std::invalid_argument("Invalid task uuid");
+            
         }
     }
 
@@ -77,7 +77,7 @@ public:
             tasks_[task_uuid].status = new_status;
         } else {
 	    std::cerr << "Invalid task uuid" << std::endl;
-            //throw std::invalid_argument("Invalid task uuid");
+            
         }
     }
 private:
@@ -90,12 +90,12 @@ private:
 
 void btree_execute(BtTaskManager &manager, unsigned int task_uuid, unsigned int bt_id) {
     try {
-        // Here is where you would add the actual execution of the behavior tree
+        
         std::cout << "Executing behavior tree with id: " << bt_id << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
         manager.updateTaskStatus(task_uuid, FINISHED);
     } catch (...) {
-        // If an error occurs, update the status to ERROR
+        
         manager.updateTaskStatus(task_uuid, ERROR);
     }
 }
@@ -133,15 +133,15 @@ int btree_monitor_process(Message &msg) {
     BtTaskManager manager;
     unsigned int req_id = msg.req_id;
     unsigned int bt_id = 10;
-    // Add a new task
+    
     unsigned int task_uuid = manager.addTask(req_id, [&]() { btree_execute(manager, req_id, bt_id); });
 
-    // Get task status
+    
     BtTaskStatus status = manager.getTaskStatus(task_uuid);
     std::cout << "Task " << status.task_uuid << " with bt_id " << status.bt_id << " is currently "
               << (status.status == RUNNING ? "running" : "not running") << std::endl;
 
-    // Let's update task status and then remove it
+    
     manager.updateTaskStatus(task_uuid, FINISHED);
     status = manager.getTaskStatus(task_uuid);
     std::cout << "Task " << status.task_uuid << " with bt_id " << status.bt_id << " is currently "
@@ -154,7 +154,7 @@ int btree_monitor_process(Message &msg) {
 int main() {
     MessageQueue queue;
 
-    // Data management thread
+    
     std::thread producer([&]() {
         for (unsigned int i = 0; i < 10; ++i) {
             Message message{i, "request_" + std::to_string(i)};
@@ -164,7 +164,7 @@ int main() {
         }
     });
 
-    // Behavior tree scheduling thread
+    
     std::thread consumer([&]() {
         for (unsigned int i = 0; i < 10; ++i) {
             Message message = queue.pop();

@@ -1,0 +1,7 @@
+#ifdef BUILD_CONTROLLER
+// Controller specific code
+#endif
+
+#ifdef BUILD_DEVICE
+// Device specific code
+#endif

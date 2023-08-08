@@ -1,0 +1,44 @@
+class DeviceTypeManager {
+public:
+    static DeviceTypeManager& getInstance() {
+        static DeviceTypeManager instance;
+        return instance;
+    }
+
+    void setDeviceType(const std::string& type) {
+        device_type = type;
+    }
+
+    bool isController() const {
+        return device_type == "controller";
+    }
+
+    bool isSweepRobot() const {
+        return device_type == "sweep_robot";
+    }
+
+private:
+    DeviceTypeManager() = default;
+    std::string device_type;
+};
+
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " device_type" << std::endl;
+        return 1;
+    }
+
+    auto& manager = DeviceTypeManager::getInstance();
+    manager.setDeviceType(argv[1]);
+
+    if (manager.isController()) {
+        // Handle controller device type
+    } else if (manager.isSweepRobot()) {
+        // Handle sweep robot device type
+    } else {
+        std::cerr << "Unknown device type: " << argv[1] << std::endl;
+        return 1;
+    }
+
+    return 0;
+}

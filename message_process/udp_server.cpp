@@ -4,7 +4,7 @@
 
 using boost::asio::ip::udp;
 
-const int HEADER_SIZE = 4;  // 4 bytes = 32 bits
+const int HEADER_SIZE = 4;  
 
 class UDPServer {
 public:
@@ -21,7 +21,7 @@ private:
             [this](boost::system::error_code ec, std::size_t bytes_transferred) {
                 if (!ec) {
                     if (total_size_ == 0 && bytes_transferred >= HEADER_SIZE) {
-                        // Parse the header to get the total size
+                        
                         total_size_ = *reinterpret_cast<int*>(recv_buffer_.data());
                         received_size_ += bytes_transferred - HEADER_SIZE;
                     } else {
@@ -49,14 +49,14 @@ private:
 	std::cout << "send receipt =" << receipt << "\n";
         socket_.async_send_to(
             boost::asio::buffer(receipt), remote_endpoint_,
-            [this](boost::system::error_code /*ec*/, std::size_t /*bytes_transferred*/) {
+            [this](boost::system::error_code ) {
                 socket_.close();
             });
     }
 
     udp::socket socket_;
     udp::endpoint remote_endpoint_;
-    std::array<char, 65536> recv_buffer_;  // max UDP size
+    std::array<char, 65536> recv_buffer_;  
     int total_size_;
     int received_size_;
     bool receipt_mode_;

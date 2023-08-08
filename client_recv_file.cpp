@@ -12,7 +12,7 @@ void start_receiving(tcp::socket& socket, const std::string& file_name) {
     }
 
     boost::asio::streambuf buf;
-    // Synchronous read for simplicity.
+    
     boost::asio::read(socket, buf);
     std::istream in_stream(&buf);
     file << in_stream.rdbuf();
@@ -28,7 +28,7 @@ int main() {
         tcp::socket socket(io_service);
         boost::asio::connect(socket, endpoint_iterator);
 
-        start_receiving(socket, "received_file.txt");  // Put your file path here.
+        start_receiving(socket, "received_file.txt");  
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }

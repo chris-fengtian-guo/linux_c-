@@ -22,7 +22,7 @@ int main() {
     struct sockaddr_in addr_recv = {};
     addr_recv.sin_family = AF_INET;
     addr_recv.sin_port = htons(MULTICAST_PORT);
-    addr_recv.sin_addr.s_addr = htonl(INADDR_ANY); // any address
+    addr_recv.sin_addr.s_addr = htonl(INADDR_ANY); 
 
     if(bind(sock, (struct sockaddr*)&addr_recv, sizeof(addr_recv)) < 0) {
         perror("bind");

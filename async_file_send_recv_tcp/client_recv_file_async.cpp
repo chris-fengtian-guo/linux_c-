@@ -8,7 +8,7 @@
 using boost::asio::ip::tcp;
 
 std::string get_file_md5(const std::string& file_name) {
-    // ... The same MD5 function as before ...
+    
 }
 
 void handle_read(const boost::system::error_code& error, std::size_t bytes_transferred, std::size_t total_bytes,
@@ -56,13 +56,13 @@ int main() {
         tcp::socket socket(io_service);
         boost::asio::connect(socket, endpoint_iterator);
 
-        // You need to know the total file size in order to receive the file asynchronously.
-        // You can first synchronize to receive the file size, or you can determine it in another way.
-        std::size_t total_bytes = /*...*/;
+        
+        
+        std::size_t total_bytes = ;
 
         receive_file(socket, "new_received_file.bin", total_bytes);
 
-        // Run the IO service to start asynchronous operations.
+        
         io_service.run();
     }
 }

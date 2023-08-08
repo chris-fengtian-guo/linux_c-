@@ -35,7 +35,7 @@ void send_msg(const char* ip, int port, const std::string& message) {
 }
 
 int main() {
-    // Test sending a message
+    
     send_msg("127.0.0.1", 9000, "Hello, UDT!");
     return 0;
 }

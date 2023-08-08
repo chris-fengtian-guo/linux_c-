@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Sent " << sent << " bytes\n";
     }
 
-    // 为了确保发送最后一部分（可能不足8192字节）
+    
     sent = UDT::send(client, buffer, ifs.gcount(), 0);
     if (sent < 0) {
         std::cerr << "send: " << UDT::getlasterror().getErrorMessage() << std::endl;

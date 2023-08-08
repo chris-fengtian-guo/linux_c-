@@ -3,11 +3,11 @@
 
 #include <string>
 
-// 定义命令信息数据结构
+
 struct Command {
-    unsigned int action; // 动作
-    unsigned int behaviorTreeID; // 行为树ID
+    unsigned int action; 
+    unsigned int behaviorTreeID; 
 };
 #define UNIX_SRV_PATH "/tmp/my_socket"
 
-#endif // COMMAND_H
+#endif 

@@ -23,7 +23,7 @@ msg receive_msg(int port) {
     char buffer[1024];
     int n = recvfrom(sockfd, &msg_type_net, sizeof(msg_type_net), 0, NULL, NULL);
 
-    // Convert msg_type from network byte order to host byte order
+    
     unsigned int msg_type = ntohl(msg_type_net);
 
     n = recvfrom(sockfd, buffer, sizeof(buffer)-1, 0, NULL, NULL);

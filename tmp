@@ -1,56 +1,4227 @@
-void receive_file(tcp::socket& socket, const std::string& file_name) {
-    // Truncate the file if it already exists, create it if it does not.
-    std::ofstream file(file_name, std::ios::binary | std::ios::trunc);
-
-    // Check if the file was opened correctly.
-    if (!file.is_open() || file.fail()) {
-        std::cerr << "Failed to open the file.\n";
-        return;
-    }
-
-    // First receive the MD5 from the server.
-    std::vector<char> md5(32);
-    boost::asio::read(socket, boost::asio::buffer(md5));
-
-    // Then receive the file data.
-    std::vector<char> file_data(1024);
-    size_t length;
-    size_t total_length = 0;
-    try {
-        while ((length = socket.read_some(boost::asio::buffer(file_data))) > 0) {
-            file.write(file_data.data(), length);
-            total_length += length;
-
-            // Check if the write was successful.
-            if (file.fail()) {
-                std::cerr << "Failed to write to the file.\n";
-                return;
-            }
-        }
-    } catch (const boost::system::system_error& ex) {
-        // If we get an EOF error, it's expected, so don't report it.
-        if (ex.code() != boost::asio::error::eof) {
-            std::cerr << "Read error: " << ex.what() << "\n";
-        }
-    }
-
-    file.close();
-
-    std::cout << "Total bytes received: " << total_length << "\n";
-
-    // Verify the MD5 of the received file.
-    std::string received_md5 = get_file_md5(file_name);
-
-    // Print the received MD5 from server.
-    std::string server_md5 = std::string(md5.begin(), md5.end());
-    std::cout << "MD5 from server: " << server_md5 << std::endl;
-
-    // Print the calculated MD5.
-    std::cout << "Calculated MD5 of received file: " << received_md5 << std::endl;
-
-    if (received_md5 == server_md5) {
-        std::cout << "File received correctly.\n";
-    } else {
-        std::cerr << "File received with errors.\n";
-    }
-}
+diff --git a/.gitignore b/.gitignore
+index 893977d..aae5e5c 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -5,3 +5,4 @@
+ !*.cpp
+ !*.h
+ !Makefile
++
+diff --git a/async_file_send_recv_tcp/client_recv_file_async.cpp b/async_file_send_recv_tcp/client_recv_file_async.cpp
+index c8848a2..a722460 100644
+--- a/async_file_send_recv_tcp/client_recv_file_async.cpp
++++ b/async_file_send_recv_tcp/client_recv_file_async.cpp
+@@ -8,7 +8,7 @@
+ using boost::asio::ip::tcp;
+ 
+ std::string get_file_md5(const std::string& file_name) {
+-    // ... The same MD5 function as before ...
++    
+ }
+ 
+ void handle_read(const boost::system::error_code& error, std::size_t bytes_transferred, std::size_t total_bytes,
+@@ -56,13 +56,13 @@ int main() {
+         tcp::socket socket(io_service);
+         boost::asio::connect(socket, endpoint_iterator);
+ 
+-        // You need to know the total file size in order to receive the file asynchronously.
+-        // You can first synchronize to receive the file size, or you can determine it in another way.
+-        std::size_t total_bytes = /*...*/;
++        
++        
++        std::size_t total_bytes = ;
+ 
+         receive_file(socket, "new_received_file.bin", total_bytes);
+ 
+-        // Run the IO service to start asynchronous operations.
++        
+         io_service.run();
+     }
+ }
+diff --git a/async_file_send_recv_udp/client_recv_async_udp.cpp b/async_file_send_recv_udp/client_recv_async_udp.cpp
+index 3da9b3f..abbe1a7 100644
+--- a/async_file_send_recv_udp/client_recv_async_udp.cpp
++++ b/async_file_send_recv_udp/client_recv_async_udp.cpp
+@@ -22,7 +22,7 @@ void handle_receive(const boost::system::error_code& error, std::size_t bytes_tr
+ 
+         ++expected_sequence_number;
+ 
+-        // Check if we have any consecutive packets in the out_of_order_data.
++        
+         while (out_of_order_data.count(expected_sequence_number)) {
+             file.write(out_of_order_data[expected_sequence_number].data(), out_of_order_data[expected_sequence_number].size());
+             std::cout << "Written out-of-order packet with sequence number: " << expected_sequence_number << " to file\n";
+@@ -30,12 +30,12 @@ void handle_receive(const boost::system::error_code& error, std::size_t bytes_tr
+             ++expected_sequence_number;
+         }
+     } else if (sequence_number > expected_sequence_number) {
+-        // Out of order packet. Save it for later.
++        
+         out_of_order_data[sequence_number] = std::vector<char>(buffer.data() + sizeof(sequence_number), buffer.data() + bytes_transferred);
+         std::cout << "Received out-of-order packet with sequence number: " << sequence_number << "\n";
+     }
+ 
+-    // Continue receiving.
++    
+     socket.async_receive_from(boost::asio::buffer(buffer), endpoint, 
+                           std::bind(handle_receive, std::placeholders::_1, std::placeholders::_2, 
+                                     std::ref(socket), std::ref(endpoint), std::ref(buffer), 
+diff --git a/async_file_send_recv_udp/server_send_async_udp.cpp b/async_file_send_recv_udp/server_send_async_udp.cpp
+index d850591..a0f0297 100644
+--- a/async_file_send_recv_udp/server_send_async_udp.cpp
++++ b/async_file_send_recv_udp/server_send_async_udp.cpp
+@@ -9,7 +9,7 @@
+ #include <iostream>
+ #include <fstream>
+ #include <vector>
+-#include <iomanip>  // add this
++#include <iomanip>  
+ #include <boost/asio.hpp>
+ #include <openssl/md5.h>
+ 
+@@ -26,10 +26,10 @@ void handle_send(const boost::system::error_code& error, std::size_t bytes_trans
+         std::cout << "Sequence number: " << sequence_number << "\n";
+         std::cout << "Total read: " << total_read << " / " << total_length << "\n";
+ 
+-        // Add sequence number to the buffer.
++        
+         std::memcpy(buffer.data(), &sequence_number, sizeof(sequence_number));
+ 
+-        // Read file data into the buffer, after the sequence number.
++        
+         file.read(buffer.data() + sizeof(sequence_number), buffer.size() - sizeof(sequence_number));
+         std::streamsize data_read = file.gcount();
+         total_read += data_read;
+@@ -53,7 +53,7 @@ void send_file(udp::socket& socket, udp::endpoint& endpoint, const std::string&
+         return;
+     }
+ 
+-    // Get the file length
++    
+     file.seekg(0, file.end);
+     std::streamsize total_length = file.tellg();
+     file.seekg(0, file.beg);
+@@ -65,10 +65,10 @@ void send_file(udp::socket& socket, udp::endpoint& endpoint, const std::string&
+ 
+     std::vector<char> buffer(1024 + sizeof(sequence_number));
+ 
+-    // Add sequence number to the buffer.
++    
+     std::memcpy(buffer.data(), &sequence_number, sizeof(sequence_number));
+ 
+-    // Read file data into the buffer, after the sequence number.
++    
+     file.read(buffer.data() + sizeof(sequence_number), buffer.size() - sizeof(sequence_number));
+     std::streamsize data_read = file.gcount();
+     total_read += data_read;
+diff --git a/async_test.cpp b/async_test.cpp
+index de26d64..8587b7e 100644
+--- a/async_test.cpp
++++ b/async_test.cpp
+@@ -1,5 +1,5 @@
+-void handle_write(const boost::system::error_code& /*error*/,
+-    size_t /*bytes_transferred*/)
++void handle_write(const boost::system::error_code& ,
++    size_t )
+ {
+ }
+ 
+@@ -10,7 +10,7 @@ void start_sending_async(tcp::socket& socket, const std::string& file_name) {
+         return;
+     }
+ 
+-    // Get file size.
++    
+     file.seekg(0, std::ios::end);
+     size_t file_size = file.tellg();
+     file.seekg(0, std::ios::beg);
+@@ -19,7 +19,7 @@ void start_sending_async(tcp::socket& socket, const std::string& file_name) {
+     std::ostream out_stream(&buf);
+     out_stream << file.rdbuf();
+     
+-    // Asynchronous write.
++    
+     boost::asio::async_write(socket, buf, handle_write);
+ }
+ 
+diff --git a/client_recv_file.cpp b/client_recv_file.cpp
+index 31a202d..033bb97 100644
+--- a/client_recv_file.cpp
++++ b/client_recv_file.cpp
+@@ -12,7 +12,7 @@ void start_receiving(tcp::socket& socket, const std::string& file_name) {
+     }
+ 
+     boost::asio::streambuf buf;
+-    // Synchronous read for simplicity.
++    
+     boost::asio::read(socket, buf);
+     std::istream in_stream(&buf);
+     file << in_stream.rdbuf();
+@@ -28,7 +28,7 @@ int main() {
+         tcp::socket socket(io_service);
+         boost::asio::connect(socket, endpoint_iterator);
+ 
+-        start_receiving(socket, "received_file.txt");  // Put your file path here.
++        start_receiving(socket, "received_file.txt");  
+     } catch (std::exception& e) {
+         std::cerr << "Exception: " << e.what() << "\n";
+     }
+diff --git a/client_send_file_test.cpp b/client_send_file_test.cpp
+index f84853c..8ff8bac 100644
+--- a/client_send_file_test.cpp
++++ b/client_send_file_test.cpp
+@@ -1,7 +1,7 @@
+ #include <iostream>
+ #include <fstream>
+ #include <vector>
+-#include <iomanip>  // add this
++#include <iomanip>  
+ #include <boost/asio.hpp>
+ #include <openssl/md5.h>
+ 
+@@ -29,20 +29,20 @@ std::string get_file_md5(const std::string& file_name) {
+ }
+ 
+ void receive_file(tcp::socket& socket, const std::string& file_name) {
+-    // Truncate the file if it already exists, create it if it does not.
++    
+     std::ofstream file(file_name, std::ios::binary | std::ios::trunc);
+ 
+-    // Check if the file was opened correctly.
++    
+     if (!file.is_open() || file.fail()) {
+         std::cerr << "Failed to open the file.\n";
+         return;
+     }
+ 
+-    // First receive the MD5 from the server.
++    
+     std::vector<char> md5(32);
+     boost::asio::read(socket, boost::asio::buffer(md5));
+ 
+-    // Then receive the file data.
++    
+     std::vector<char> file_data(1024);
+     size_t length;
+     size_t total_length = 0;
+@@ -51,14 +51,14 @@ void receive_file(tcp::socket& socket, const std::string& file_name) {
+             file.write(file_data.data(), length);
+             total_length += length;
+ 
+-            // Check if the write was successful.
++            
+             if (file.fail()) {
+                 std::cerr << "Failed to write to the file.\n";
+                 return;
+             }
+         }
+     } catch (const boost::system::system_error& ex) {
+-        // If we get an EOF error, it's expected, so don't report it.
++        
+         if (ex.code() != boost::asio::error::eof) {
+             std::cerr << "Read error: " << ex.what() << "\n";
+         }
+@@ -68,14 +68,14 @@ void receive_file(tcp::socket& socket, const std::string& file_name) {
+ 
+     std::cout << "Total bytes received: " << total_length << "\n";
+ 
+-    // Verify the MD5 of the received file.
++    
+     std::string received_md5 = get_file_md5(file_name);
+ 
+-    // Print the received MD5 from server.
++    
+     std::string server_md5 = std::string(md5.begin(), md5.end());
+     std::cout << "MD5 from server: " << server_md5 << std::endl;
+ 
+-    // Print the calculated MD5.
++    
+     std::cout << "Calculated MD5 of received file: " << received_md5 << std::endl;
+ 
+     if (received_md5 == server_md5) {
+@@ -95,7 +95,7 @@ int main() {
+         tcp::socket socket(io_service);
+         boost::asio::connect(socket, endpoint_iterator);
+ 
+-        receive_file(socket, "new_received_file.bin");  // Replace with your file path.
++        receive_file(socket, "new_received_file.bin");  
+     } catch (std::exception& e) {
+         std::cerr << "Exception: " << e.what() << "\n";
+     }
+diff --git a/google_log b/google_log
+deleted file mode 100755
+index 93c646b..0000000
+Binary files a/google_log and /dev/null differ
+diff --git a/google_log.INFO b/google_log.INFO
+deleted file mode 120000
+index ca29e1b..0000000
+--- a/google_log.INFO
++++ /dev/null
+@@ -1 +0,0 @@
+-log_file.log20230702-224038.271190
+\ No newline at end of file
+diff --git a/google_log.cpp b/google_log.cpp
+index f4306dc..dda2d91 100644
+--- a/google_log.cpp
++++ b/google_log.cpp
+@@ -1,13 +1,13 @@
+ #include <glog/logging.h>
+ 
+ int main(int argc, char* argv[]) {
+-    // 初始化 Google's logging library.
++    
+     google::InitGoogleLogging(argv[0]);
+ 
+-    // 设置日志输出到文件
++    
+     google::SetLogDestination(google::GLOG_INFO, "log_file.log");
+ 
+-    // 记录一些基本日志
++    
+     LOG(INFO) << "This is an INFO log";
+     LOG(WARNING) << "This is a WARNING log";
+     LOG(ERROR) << "This is an ERROR log";
+diff --git a/md5_sum.cpp b/md5_sum.cpp
+index 252b44a..2eb1fab 100644
+--- a/md5_sum.cpp
++++ b/md5_sum.cpp
+@@ -49,30 +49,30 @@ std::string get_md5_hash(const std::string& file_name) {
+     return sout.str();
+ }
+ void start_sending(boost::asio::ip::tcp::socket& socket, const std::string& file_name) {
+-//void start_sending(tcp::socket& socket, const std::string& file_name) {
++
+     std::string md5_hash = get_md5_hash(file_name);
+     std::string file_size = get_file_size(file_name);
+ 
+-    // Assume the hash and the size are sent in the format "hash|size\n"
++    
+     std::string hash_and_size = md5_hash + "|" + file_size + "\n";
+ 
+     boost::asio::write(socket, boost::asio::buffer(hash_and_size));
+ 
+-    // Proceed with sending the file.
+-    // ...
++    
++    
+ }
+ int main() {
+-    // 创建 Boost.Asio io_context 对象
++    
+     boost::asio::io_context io_context;
+ 
+-    // 创建 socket 对象
++    
+     boost::asio::ip::tcp::socket socket(io_context);
+ 
+-    // 连接到服务器
+-    //boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::make_address("服务器IP地址"), 服务器端口号);
++    
++    
+     socket.connect(endpoint);
+ 
+-    // 调用 start_sending 函数
++    
+     std::string file_name = "文件名";
+     start_sending(socket, file_name);
+ 
+diff --git a/message_process/backup/msg_process.cpp b/message_process/backup/msg_process.cpp
+index b4e04c7..760c9d2 100644
+--- a/message_process/backup/msg_process.cpp
++++ b/message_process/backup/msg_process.cpp
+@@ -8,7 +8,7 @@
+ 
+ void monitorBehaviorTreeProcess(pid_t pid) {
+     int status;
+-    waitpid(pid, &status, 0);  // 等待行为树进程结束
++    waitpid(pid, &status, 0);  
+     if (WIFEXITED(status)) {
+         int exitCode = WEXITSTATUS(status);
+         std::cout << "Behavior Tree process exited with code: " << exitCode << std::endl;
+@@ -21,21 +21,21 @@ void monitorBehaviorTreeProcess(pid_t pid) {
+ }
+ 
+ int main() {
+-    // 启动行为树进程
++    
+     pid_t pid = fork();
+     if (pid == 0) {
+-        // 在子进程中执行行为树进程
+-        // TODO: 替换为您的行为树进程启动代码
++        
++        
+         execl("/usr/bin/df", "behavior_tree_process", nullptr);
+         exit(0);
+     } else if (pid > 0) {
+-        // 在父进程中监控行为树进程
++        
+         std::thread monitorThread(monitorBehaviorTreeProcess, pid);
+ 
+-        // 假设您的命令管理模块需要继续执行其他任务
+-        // 这里可以加入您的其他代码
++        
++        
+ 
+-        // 等待线程结束
++        
+         monitorThread.join();
+     } else {
+         std::cerr << "Failed to fork a new process" << std::endl;
+diff --git a/message_process/backup/msg_process2.cpp b/message_process/backup/msg_process2.cpp
+index 21e28dd..40c6197 100644
+--- a/message_process/backup/msg_process2.cpp
++++ b/message_process/backup/msg_process2.cpp
+@@ -6,19 +6,19 @@
+ #include <unistd.h>
+ #include <sys/types.h>
+ #include <sys/wait.h>
+-#include <vector> // 添加vector头文件
++#include <vector> 
+ 
+ #include "common_head.h"
+ 
+-// 封装的函数，启动一个二进制程序并传递一个参数
++
+ int runBinaryWithArgument(const char* binaryPath, const char* name, const char* argument) {
+     pid_t pid = fork();
+     if (pid == 0) {
+-        // 在子进程中执行二进制程序
++        
+         execlp(binaryPath, name, argument, nullptr);
+         exit(0);
+     } else if (pid > 0) {
+-        // 在父进程中等待子进程结束
++        
+         int status;
+         waitpid(pid, &status, 0);
+ 
+@@ -40,48 +40,48 @@ int runBinaryWithArgument(const char* binaryPath, const char* name, const char*
+     }
+ }
+ 
+-// 行为树路径数组
++
+ const std::vector<std::string> behaviorTreePaths = {
+     "/root/autodl-tmp/linux_c++/message_process/behavior_tree_style1",
+     "/root/autodl-tmp/linux_c++/message_process/behavior_tree_style2"
+ };
+ 
+-// 根据命令信息执行相应的行为树，并返回执行的行为树路径
++
+ std::string executeBehaviorTree(const Command& command) {
+     if (command.behaviorTreeID < behaviorTreePaths.size()) {
+         const std::string& behaviorTreePath = behaviorTreePaths[command.behaviorTreeID];
+-        // 这里执行行为树程序，您可以使用之前提供的函数来执行二进制程序
++        
+         std::cout << "Executing behavior tree at path: " << behaviorTreePath << std::endl;
+         return behaviorTreePath;
+     } else {
+         std::cerr << "Invalid behavior tree ID: " << command.behaviorTreeID << std::endl;
+-        return ""; // 返回空字符串表示未找到匹配的行为树
++        return ""; 
+     }
+ }
+ 
+ int main() {
+-    const char* argument1 = "1";        // 二进制程序1的参数
++    const char* argument1 = "1";        
+ 
+-    const char* binary2Path = "/root/autodl-tmp/linux_c++/message_process/process_exit_example"; // 二进制程序2的路径
+-    const char* argument2 = "2";        // 二进制程序2的参数
++    const char* binary2Path = "/root/autodl-tmp/linux_c++/message_process/process_exit_example"; 
++    const char* argument2 = "2";        
+     const char* name = "message_process";
+-    // 假设接收到的消息内容包含动作和行为树ID
++    
+     std::string action = "run";
+-    unsigned int behaviorTreeID = 0; // 假设行为树ID为0
++    unsigned int behaviorTreeID = 0; 
+ 
+-    // 构造命令信息
++    
+     Command cmd;
+     cmd.action = action;
+     cmd.behaviorTreeID = behaviorTreeID;
+ 
+-    // 执行相应的行为树，并获取执行的行为树路径
+-    std::string binary1Path = executeBehaviorTree(cmd); // 将binary1Path改为std::string类型
++    
++    std::string binary1Path = executeBehaviorTree(cmd); 
+ 
+     std::cout << "Executed behavior tree path: " << binary1Path << std::endl;
+     const char* binary1PathChar = binary1Path.c_str();
+ 
+     int result1 = runBinaryWithArgument(binary1PathChar, name, argument1);
+-    //int result2 = runBinaryWithArgument(binary2Path, name, argument2);
++    
+ 
+     return 0;
+ }
+diff --git a/message_process/backup/process_exit_example.cpp b/message_process/backup/process_exit_example.cpp
+index 6ee018a..b0f3989 100644
+--- a/message_process/backup/process_exit_example.cpp
++++ b/message_process/backup/process_exit_example.cpp
+@@ -4,14 +4,14 @@
+ #include <chrono>
+ #include <cstdlib>
+ 
+-// 信号处理函数，用于模拟异常信号退出
++
+ void signal_handler(int signal) {
+     std::cout << "Received signal: " << signal << std::endl;
+     std::this_thread::sleep_for(std::chrono::seconds(3));
+     std::exit(signal);
+ }
+ 
+-// 子线程函数，用于正常退出
++
+ void normal_thread_function() {
+     std::this_thread::sleep_for(std::chrono::seconds(3));
+     std::cout << "Child thread completed normally" << std::endl;
+@@ -26,34 +26,34 @@ int main(int argc, char* argv[]) {
+     int exit_code = std::atoi(argv[1]);
+     std::cout << "input arg1=" << argv[1] << "\n";
+ 
+-    // 设置信号处理函数，用于模拟异常退出
++    
+     signal(SIGSEGV, signal_handler);
+     signal(SIGFPE, signal_handler);
+ 
+     switch (exit_code) {
+         case 0:
+-            // 创建子线程并等待其退出
++            
+             {
+                 std::thread thread(normal_thread_function);
+                 thread.join();
+             }
+             break;
+         case 1:
+-            // 创建子线程，模拟异常信号退出
++            
+             {
+                 std::thread thread([]() {
+-                    // 模拟除以零异常
++                    
+                     int result = 1 / 0;
+-                    (void)result; // 防止编译器提示未使用变量
++                    (void)result; 
+                 });
+                 thread.join();
+             }
+             break;
+         case 2:
+-            // 创建子线程，模拟除以零异常退出
++            
+             {
+                 std::thread thread([]() {
+-                    // 模拟访问无效内存
++                    
+                     int* p = nullptr;
+                     *p = 10;
+                 });
+diff --git a/message_process/backup/unix_client_send_cmd.cpp b/message_process/backup/unix_client_send_cmd.cpp
+index b99da2d..4205676 100644
+--- a/message_process/backup/unix_client_send_cmd.cpp
++++ b/message_process/backup/unix_client_send_cmd.cpp
+@@ -4,14 +4,14 @@
+ #include <unistd.h>
+ #include <string>
+ 
+-// 定义命令信息数据结构
++
+ struct Command {
+-    std::string action; // 动作
+-    int behaviorTreeID; // 行为树ID
++    std::string action; 
++    int behaviorTreeID; 
+ };
+ 
+ int main() {
+-    // 创建Unix域套接字
++    
+     int sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (sockfd == -1) {
+         perror("socket");
+@@ -20,30 +20,30 @@ int main() {
+ 
+     sockaddr_un server_addr;
+     server_addr.sun_family = AF_UNIX;
+-    strcpy(server_addr.sun_path, "/tmp/unix_socket_server"); // 服务器的Unix域套接字文件路径
++    strcpy(server_addr.sun_path, "/tmp/unix_socket_server"); 
+ 
+-    // 连接到服务器
++    
+     if (connect(sockfd, (sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+         perror("connect");
+         close(sockfd);
+         return 1;
+     }
+ 
+-    // 假设接收到的消息内容包含动作和行为树ID
++    
+     std::string action = "run";
+     int behaviorTreeID = 0;
+ 
+-    // 构造命令信息
++    
+     Command cmd;
+     cmd.action = action;
+     cmd.behaviorTreeID = behaviorTreeID;
+ 
+-    // 发送命令信息到服务器
++    
+     if (send(sockfd, &cmd, sizeof(cmd), 0) == -1) {
+         perror("send");
+     }
+ 
+-    // 关闭套接字
++    
+     close(sockfd);
+ 
+     return 0;
+diff --git a/message_process/backup/unix_server_rcv_cmd.cpp b/message_process/backup/unix_server_rcv_cmd.cpp
+index 8ee8a1d..3a29176 100644
+--- a/message_process/backup/unix_server_rcv_cmd.cpp
++++ b/message_process/backup/unix_server_rcv_cmd.cpp
+@@ -3,14 +3,14 @@
+ #include <sys/un.h>
+ #include <unistd.h>
+ 
+-// 定义命令信息数据结构
++
+ struct Command {
+-    std::string action; // 动作
+-    int behaviorTreeID; // 行为树ID
++    std::string action; 
++    int behaviorTreeID; 
+ };
+ 
+ int main() {
+-    // 创建Unix域套接字
++    
+     int server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (server_fd == -1) {
+         perror("socket");
+@@ -19,16 +19,16 @@ int main() {
+ 
+     sockaddr_un server_addr;
+     server_addr.sun_family = AF_UNIX;
+-    strcpy(server_addr.sun_path, "/tmp/unix_socket_server"); // 服务器的Unix域套接字文件路径
++    strcpy(server_addr.sun_path, "/tmp/unix_socket_server"); 
+ 
+-    // 绑定套接字到指定地址
++    
+     if (bind(server_fd, (sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+         perror("bind");
+         close(server_fd);
+         return 1;
+     }
+ 
+-    // 监听连接
++    
+     if (listen(server_fd, 1) == -1) {
+         perror("listen");
+         close(server_fd);
+@@ -40,7 +40,7 @@ int main() {
+     sockaddr_un client_addr;
+     socklen_t client_addr_len = sizeof(client_addr);
+ 
+-    // 接受客户端连接
++    
+     int client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_addr_len);
+     if (client_fd == -1) {
+         perror("accept");
+@@ -50,16 +50,16 @@ int main() {
+ 
+     std::cout << "Client connected" << std::endl;
+ 
+-    // 接收命令信息
++    
+     Command cmd;
+     if (recv(client_fd, &cmd, sizeof(cmd), 0) == -1) {
+         perror("recv");
+     } else {
+-        // 解析命令信息
++        
+         std::cout << "Received command: " << cmd.action << " " << cmd.behaviorTreeID << std::endl;
+     }
+ 
+-    // 关闭套接字
++    
+     close(client_fd);
+     close(server_fd);
+ 
+diff --git a/message_process/backup/unix_sock_client.cpp b/message_process/backup/unix_sock_client.cpp
+index 219b090..9dc8b4f 100644
+--- a/message_process/backup/unix_sock_client.cpp
++++ b/message_process/backup/unix_sock_client.cpp
+@@ -1,4 +1,4 @@
+-// Unix套接字客户端示例代码
++
+ 
+ #include <iostream>
+ #include <cstring>
+@@ -7,27 +7,27 @@
+ #include <unistd.h>
+ 
+ int main() {
+-    // 创建套接字
++    
+     int clientSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (clientSocket == -1) {
+         std::cerr << "Failed to create client socket" << std::endl;
+         return 1;
+     }
+ 
+-    // 配置服务器套接字地址
++    
+     struct sockaddr_un serverAddr;
+     memset(&serverAddr, 0, sizeof(serverAddr));
+     serverAddr.sun_family = AF_UNIX;
+     strncpy(serverAddr.sun_path, "/tmp/my_socket", sizeof(serverAddr.sun_path) - 1);
+ 
+-    // 连接到服务器
++    
+     if (connect(clientSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
+         std::cerr << "Failed to connect to server" << std::endl;
+         close(clientSocket);
+         return 1;
+     }
+ 
+-    // 数据通信
++    
+     const char* message = "Hello, server!";
+     ssize_t bytesSent = send(clientSocket, message, strlen(message), 0);
+     if (bytesSent == -1) {
+@@ -39,10 +39,10 @@ int main() {
+     ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+     if (bytesRead > 0) {
+         std::cout << "Received: " << buffer << std::endl;
+-        // 处理接收到的数据
++        
+     }
+ 
+-    // 关闭套接字
++    
+     close(clientSocket);
+ 
+     return 0;
+diff --git a/message_process/backup/unix_sock_server.cpp b/message_process/backup/unix_sock_server.cpp
+index 4b830a3..c6ee3e8 100644
+--- a/message_process/backup/unix_sock_server.cpp
++++ b/message_process/backup/unix_sock_server.cpp
+@@ -1,4 +1,4 @@
+-// Unix套接字服务器示例代码
++
+ 
+ #include <iostream>
+ #include <cstring>
+@@ -7,34 +7,34 @@
+ #include <unistd.h>
+ 
+ int main() {
+-    // 创建套接字
++    
+     int serverSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (serverSocket == -1) {
+         std::cerr << "Failed to create server socket" << std::endl;
+         return 1;
+     }
+ 
+-    // 配置服务器套接字地址
++    
+     struct sockaddr_un serverAddr;
+     memset(&serverAddr, 0, sizeof(serverAddr));
+     serverAddr.sun_family = AF_UNIX;
+     strncpy(serverAddr.sun_path, "/tmp/my_socket", sizeof(serverAddr.sun_path) - 1);
+ 
+-    // 绑定套接字
++    
+     if (bind(serverSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
+         std::cerr << "Failed to bind server socket" << std::endl;
+         close(serverSocket);
+         return 1;
+     }
+ 
+-    // 监听连接
++    
+     if (listen(serverSocket, 5) == -1) {
+         std::cerr << "Failed to listen on server socket" << std::endl;
+         close(serverSocket);
+         return 1;
+     }
+ 
+-    // 接受连接
++    
+     int clientSocket = accept(serverSocket, nullptr, nullptr);
+     if (clientSocket == -1) {
+         std::cerr << "Failed to accept client connection" << std::endl;
+@@ -42,15 +42,15 @@ int main() {
+         return 1;
+     }
+ 
+-    // 数据通信
++    
+     char buffer[256];
+     memset(buffer, 0, sizeof(buffer));
+     ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+     if (bytesRead > 0) {
+         std::cout << "Received: " << buffer << std::endl;
+-        // 处理接收到的数据
++        
+ 
+-        // 发送响应
++        
+         const char* response = "Hello, client!";
+         ssize_t bytesSent = send(clientSocket, response, strlen(response), 0);
+         if (bytesSent == -1) {
+@@ -58,11 +58,11 @@ int main() {
+         }
+     }
+ 
+-    // 关闭套接字
++    
+     close(clientSocket);
+     close(serverSocket);
+ 
+-    // 删除套接字文件
++    
+     unlink("/tmp/my_socket");
+ 
+     return 0;
+diff --git a/message_process/backup/unix_sock_server_thread.cpp b/message_process/backup/unix_sock_server_thread.cpp
+index 0c9afd1..c12232a 100644
+--- a/message_process/backup/unix_sock_server_thread.cpp
++++ b/message_process/backup/unix_sock_server_thread.cpp
+@@ -1,4 +1,4 @@
+-// Unix套接字服务器示例代码
++
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -18,9 +18,9 @@ void* handleClient(void* clientSocket) {
+     ssize_t bytesRead = recv(client, buffer, sizeof(buffer) - 1, 0);
+     if (bytesRead > 0) {
+         printf("Received from client: %s\n", buffer);
+-        // 处理客户端请求
++        
+ 
+-        // 发送响应
++        
+         const char* response = "Hello, client!";
+         send(client, response, strlen(response), 0);
+     }
+@@ -31,27 +31,27 @@ void* handleClient(void* clientSocket) {
+ }
+ 
+ int main() {
+-    // 创建套接字
++    
+     int serverSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (serverSocket == -1) {
+         perror("Failed to create server socket");
+         return 1;
+     }
+ 
+-    // 配置服务器套接字地址
++    
+     struct sockaddr_un serverAddr;
+     memset(&serverAddr, 0, sizeof(serverAddr));
+     serverAddr.sun_family = AF_UNIX;
+     strncpy(serverAddr.sun_path, "/tmp/my_socket", sizeof(serverAddr.sun_path) - 1);
+ 
+-    // 绑定套接字
++    
+     if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+         perror("Failed to bind server socket");
+         close(serverSocket);
+         return 1;
+     }
+ 
+-    // 监听连接
++    
+     if (listen(serverSocket, MAX_CLIENTS) == -1) {
+         perror("Failed to listen on server socket");
+         close(serverSocket);
+@@ -59,7 +59,7 @@ int main() {
+     }
+ 
+     while (1) {
+-        // 接受连接
++        
+         int* clientSocket = (int*)malloc(sizeof(int));
+         if (clientSocket == NULL) {
+             perror("Failed to allocate memory");
+@@ -72,7 +72,7 @@ int main() {
+             continue;
+         }
+ 
+-        // 创建线程处理客户端请求
++        
+         pthread_t tid;
+         if (pthread_create(&tid, NULL, handleClient, clientSocket) != 0) {
+             perror("Failed to create thread");
+diff --git a/message_process/common_head.h b/message_process/common_head.h
+index 09588f3..cc2b5c0 100644
+--- a/message_process/common_head.h
++++ b/message_process/common_head.h
+@@ -3,11 +3,11 @@
+ 
+ #include <string>
+ 
+-// 定义命令信息数据结构
++
+ struct Command {
+-    unsigned int action; // 动作
+-    unsigned int behaviorTreeID; // 行为树ID
++    unsigned int action; 
++    unsigned int behaviorTreeID; 
+ };
+ #define UNIX_SRV_PATH "/tmp/my_socket"
+ 
+-#endif // COMMAND_H
++#endif 
+diff --git a/message_process/msg_process2.cpp b/message_process/msg_process2.cpp
+index a11a45a..ab340f0 100644
+--- a/message_process/msg_process2.cpp
++++ b/message_process/msg_process2.cpp
+@@ -6,7 +6,7 @@
+ #include <unistd.h>
+ #include <sys/types.h>
+ #include <sys/wait.h>
+-#include <vector> // 添加vector头文件
++#include <vector> 
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -20,15 +20,15 @@
+ 
+ #include "common_head.h"
+ 
+-// 封装的函数，启动一个二进制程序并传递一个参数
++
+ int runBinaryWithArgument(const char* binaryPath, const char* name, const char* argument) {
+     pid_t pid = fork();
+     if (pid == 0) {
+-        // 在子进程中执行二进制程序
++        
+         execlp(binaryPath, name, argument, nullptr);
+         exit(0);
+     } else if (pid > 0) {
+-        // 在父进程中等待子进程结束
++        
+         int status;
+         waitpid(pid, &status, 0);
+ 
+@@ -50,55 +50,51 @@ int runBinaryWithArgument(const char* binaryPath, const char* name, const char*
+     }
+ }
+ 
+-// 行为树路径数组
++
+ const std::vector<std::string> behaviorTreePaths = {
+     "/root/autodl-tmp/linux_c++/message_process/behavior_tree_style1",
+     "/root/autodl-tmp/linux_c++/message_process/behavior_tree_style2"
+ };
+ 
+-// 根据命令信息执行相应的行为树，并返回执行的行为树路径
++
+ std::string executeBehaviorTree(const Command& command) {
+     if (command.behaviorTreeID < behaviorTreePaths.size()) {
+         const std::string& behaviorTreePath = behaviorTreePaths[command.behaviorTreeID];
+-        // 这里执行行为树程序，您可以使用之前提供的函数来执行二进制程序
++        
+         std::cout << "Executing behavior tree at path: " << behaviorTreePath << std::endl;
+         return behaviorTreePath;
+     } else {
+         std::cerr << "Invalid behavior tree ID: " << command.behaviorTreeID << std::endl;
+-        return ""; // 返回空字符串表示未找到匹配的行为树
++        return ""; 
+     }
+ }
+ 
+ void* handleClient(void* clientSocket) {
+     int client = *(int*)clientSocket;
+     int bytesRead;
+-    //char buffer[256];
+-    //memset(buffer, 0, sizeof(buffer));
++    
++    
+ 
+     Command cmd;
+     bytesRead = recv(client, &cmd, sizeof(cmd), 0);
+     if (bytesRead == -1) {
+         perror("recv");
+     } else {
+-        // 解析命令信息
++        
+ 	std::cout << "receive len=" << bytesRead << "\n";
+         std::cout << "Received command: " << cmd.action << " " << cmd.behaviorTreeID << std::endl;
+-    	// 发送响应
++    	
+         const char* response = "Hello, client!";
+-        //send(client, response, strlen(response), 0);
++        
+     }
+     close(client);
+     free(clientSocket);
+ 
+     if (bytesRead > 0) {
+-	const char* argument1 = "1";        // 二进制程序1的参数
+-	/*
+-        const char* binary2Path = "/root/autodl-tmp/linux_c++/message_process/process_exit_example"; // 二进制程序2的路径
+-        const char* argument2 = "2";        // 二进制程序2的参数
+-        const char* name = "message_process";
+-	*/
+-	// 执行相应的行为树，并获取执行的行为树路径
+-    	std::string binary1Path = executeBehaviorTree(cmd); // 将binary1Path改为std::string类型
++	const char* argument1 = "1";        
++	
++	
++    	std::string binary1Path = executeBehaviorTree(cmd); 
+ 
+     	std::cout << "Executed behavior tree path: " << binary1Path << std::endl;
+     	const char* binary1PathChar = binary1Path.c_str();
+@@ -109,7 +105,7 @@ void* handleClient(void* clientSocket) {
+ }
+ 
+ int run_unix_server() {
+-    // 创建套接字
++    
+     unlink(UNIX_SRV_PATH);
+     int serverSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (serverSocket == -1) {
+@@ -117,20 +113,20 @@ int run_unix_server() {
+         return 1;
+     }
+ 
+-    // 配置服务器套接字地址
++    
+     struct sockaddr_un serverAddr;
+     memset(&serverAddr, 0, sizeof(serverAddr));
+     serverAddr.sun_family = AF_UNIX;
+     strncpy(serverAddr.sun_path, UNIX_SRV_PATH, sizeof(serverAddr.sun_path) - 1);
+ 
+-    // 绑定套接字
++    
+     if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+         perror("Failed to bind server socket");
+         close(serverSocket);
+         return 1;
+     }
+ 
+-    // 监听连接
++    
+     if (listen(serverSocket, MAX_CLIENTS) == -1) {
+         perror("Failed to listen on server socket");
+         close(serverSocket);
+@@ -138,7 +134,7 @@ int run_unix_server() {
+     }
+ 
+     while (1) {
+-        // 接受连接
++        
+         int* clientSocket = (int*)malloc(sizeof(int));
+         if (clientSocket == NULL) {
+             perror("Failed to allocate memory");
+@@ -151,7 +147,7 @@ int run_unix_server() {
+             continue;
+         }
+ 
+-        // 创建线程处理客户端请求
++        
+         pthread_t tid;
+         if (pthread_create(&tid, NULL, handleClient, clientSocket) != 0) {
+             perror("Failed to create thread");
+@@ -169,29 +165,6 @@ int run_unix_server() {
+ }
+ int main() {
+     run_unix_server();
+-    /*
+-    const char* argument1 = "1";        // 二进制程序1的参数
+-
+-    const char* binary2Path = "/root/autodl-tmp/linux_c++/message_process/process_exit_example"; // 二进制程序2的路径
+-    const char* argument2 = "2";        // 二进制程序2的参数
+-    const char* name = "message_process";
+-    // 假设接收到的消息内容包含动作和行为树ID
+-    std::string action = "run";
+-    unsigned int behaviorTreeID = 0; // 假设行为树ID为0
+-
+-    // 构造命令信息
+-    Command cmd;
+-    cmd.action = action;
+-    cmd.behaviorTreeID = behaviorTreeID;
+-
+-    // 执行相应的行为树，并获取执行的行为树路径
+-    std::string binary1Path = executeBehaviorTree(cmd); // 将binary1Path改为std::string类型
+-
+-    std::cout << "Executed behavior tree path: " << binary1Path << std::endl;
+-    const char* binary1PathChar = binary1Path.c_str();
+-
+-    int result1 = runBinaryWithArgument(binary1PathChar, name, argument1);
+-    //int result2 = runBinaryWithArgument(binary2Path, name, argument2);
+-    */
++    
+     return 0;
+ }
+diff --git a/message_process/process_exit_example.cpp b/message_process/process_exit_example.cpp
+index 6ee018a..b0f3989 100644
+--- a/message_process/process_exit_example.cpp
++++ b/message_process/process_exit_example.cpp
+@@ -4,14 +4,14 @@
+ #include <chrono>
+ #include <cstdlib>
+ 
+-// 信号处理函数，用于模拟异常信号退出
++
+ void signal_handler(int signal) {
+     std::cout << "Received signal: " << signal << std::endl;
+     std::this_thread::sleep_for(std::chrono::seconds(3));
+     std::exit(signal);
+ }
+ 
+-// 子线程函数，用于正常退出
++
+ void normal_thread_function() {
+     std::this_thread::sleep_for(std::chrono::seconds(3));
+     std::cout << "Child thread completed normally" << std::endl;
+@@ -26,34 +26,34 @@ int main(int argc, char* argv[]) {
+     int exit_code = std::atoi(argv[1]);
+     std::cout << "input arg1=" << argv[1] << "\n";
+ 
+-    // 设置信号处理函数，用于模拟异常退出
++    
+     signal(SIGSEGV, signal_handler);
+     signal(SIGFPE, signal_handler);
+ 
+     switch (exit_code) {
+         case 0:
+-            // 创建子线程并等待其退出
++            
+             {
+                 std::thread thread(normal_thread_function);
+                 thread.join();
+             }
+             break;
+         case 1:
+-            // 创建子线程，模拟异常信号退出
++            
+             {
+                 std::thread thread([]() {
+-                    // 模拟除以零异常
++                    
+                     int result = 1 / 0;
+-                    (void)result; // 防止编译器提示未使用变量
++                    (void)result; 
+                 });
+                 thread.join();
+             }
+             break;
+         case 2:
+-            // 创建子线程，模拟除以零异常退出
++            
+             {
+                 std::thread thread([]() {
+-                    // 模拟访问无效内存
++                    
+                     int* p = nullptr;
+                     *p = 10;
+                 });
+diff --git a/message_process/success_udp2/udp_client.cpp b/message_process/success_udp2/udp_client.cpp
+index 8b34b1d..ed8897c 100644
+--- a/message_process/success_udp2/udp_client.cpp
++++ b/message_process/success_udp2/udp_client.cpp
+@@ -6,7 +6,7 @@
+ using boost::asio::ip::udp;
+ 
+ const int PACKET_SIZE = 1024;
+-const int TOTAL_DATA_SIZE = 12000;  // Total size of the data to be sent
++const int TOTAL_DATA_SIZE = 12000;  
+ 
+ int main(int argc, char* argv[]) {
+     try {
+@@ -21,21 +21,21 @@ int main(int argc, char* argv[]) {
+         udp::socket socket(io_service);
+         socket.open(udp::v4());
+ 
+-        std::string data(TOTAL_DATA_SIZE, 'x');  // Create a string of 12000 characters
++        std::string data(TOTAL_DATA_SIZE, 'x');  
+         std::vector<char> send_buffer;
+ 
+-        // Insert data length at the beginning of the buffer
++        
+         int data_length = static_cast<int>(data.size());
+         for (int i = 0; i < sizeof(data_length); ++i) {
+             send_buffer.push_back(reinterpret_cast<char*>(&data_length)[i]);
+         }
+ 
+-        // Insert the actual data
++        
+         for (const auto& ch : data) {
+             send_buffer.push_back(ch);
+         }
+ 
+-        // Send data in packets of PACKET_SIZE
++        
+         for (size_t i = 0; i < send_buffer.size(); i += PACKET_SIZE) {
+             std::vector<char> packet(send_buffer.begin() + i, 
+                 send_buffer.begin() + std::min(send_buffer.size(), i + PACKET_SIZE));
+diff --git a/message_process/success_udp2/udp_server.cpp b/message_process/success_udp2/udp_server.cpp
+index aa1322b..adde358 100644
+--- a/message_process/success_udp2/udp_server.cpp
++++ b/message_process/success_udp2/udp_server.cpp
+@@ -4,7 +4,7 @@
+ 
+ using boost::asio::ip::udp;
+ 
+-const int HEADER_SIZE = 4;  // 4 bytes = 32 bits
++const int HEADER_SIZE = 4;  
+ 
+ class UDPServer {
+ public:
+@@ -21,7 +21,7 @@ private:
+             [this](boost::system::error_code ec, std::size_t bytes_transferred) {
+                 if (!ec) {
+                     if (total_size_ == 0 && bytes_transferred >= HEADER_SIZE) {
+-                        // Parse the header to get the total size
++                        
+                         total_size_ = *reinterpret_cast<int*>(recv_buffer_.data());
+                         received_size_ += bytes_transferred - HEADER_SIZE;
+ 			std::cout << "init receive bytes=" << bytes_transferred << "\n";
+@@ -42,7 +42,7 @@ private:
+ 
+     udp::socket socket_;
+     udp::endpoint remote_endpoint_;
+-    std::array<char, 65536> recv_buffer_;  // max UDP size
++    std::array<char, 65536> recv_buffer_;  
+     int total_size_;
+     int received_size_;
+ };
+diff --git a/message_process/success_udp3/udp_client.cpp b/message_process/success_udp3/udp_client.cpp
+index f58dd74..1a09640 100644
+--- a/message_process/success_udp3/udp_client.cpp
++++ b/message_process/success_udp3/udp_client.cpp
+@@ -6,7 +6,7 @@
+ using boost::asio::ip::udp;
+ 
+ const int PACKET_SIZE = 1024;
+-const int TOTAL_DATA_SIZE = 12000;  // Total size of the data to be sent
++const int TOTAL_DATA_SIZE = 12000;  
+ 
+ class UDPClient {
+ public:
+@@ -16,28 +16,28 @@ public:
+         udp::endpoint receiver_endpoint = *resolver.resolve({udp::v4(), host, port});
+         socket_.open(udp::v4());
+ 
+-        std::string data(TOTAL_DATA_SIZE, 'x');  // Create a string of 12000 characters
++        std::string data(TOTAL_DATA_SIZE, 'x');  
+         std::vector<char> send_buffer;
+ 
+-        // Insert data length at the beginning of the buffer
++        
+         int data_length = static_cast<int>(data.size());
+         for (int i = 0; i < sizeof(data_length); ++i) {
+             send_buffer.push_back(reinterpret_cast<char*>(&data_length)[i]);
+         }
+ 
+-        // Insert the actual data
++        
+         for (const auto& ch : data) {
+             send_buffer.push_back(ch);
+         }
+ 
+-        // Send data in packets of PACKET_SIZE
++        
+         for (size_t i = 0; i < send_buffer.size(); i += PACKET_SIZE) {
+             std::vector<char> packet(send_buffer.begin() + i, 
+                 send_buffer.begin() + std::min(send_buffer.size(), i + PACKET_SIZE));
+             socket_.send_to(boost::asio::buffer(packet), receiver_endpoint);
+         }
+ 
+-        // Start asynchronous receive for receipt from the server
++        
+         start_receive();
+     }
+ 
+diff --git a/message_process/success_udp3/udp_server.cpp b/message_process/success_udp3/udp_server.cpp
+index a1223d3..a49d72e 100644
+--- a/message_process/success_udp3/udp_server.cpp
++++ b/message_process/success_udp3/udp_server.cpp
+@@ -4,7 +4,7 @@
+ 
+ using boost::asio::ip::udp;
+ 
+-const int HEADER_SIZE = 4;  // 4 bytes = 32 bits
++const int HEADER_SIZE = 4;  
+ 
+ class UDPServer {
+ public:
+@@ -21,7 +21,7 @@ private:
+             [this](boost::system::error_code ec, std::size_t bytes_transferred) {
+                 if (!ec) {
+                     if (total_size_ == 0 && bytes_transferred >= HEADER_SIZE) {
+-                        // Parse the header to get the total size
++                        
+                         total_size_ = *reinterpret_cast<int*>(recv_buffer_.data());
+                         received_size_ += bytes_transferred - HEADER_SIZE;
+                     } else {
+@@ -49,14 +49,14 @@ private:
+ 	std::cout << "send receipt =" << receipt << "\n";
+         socket_.async_send_to(
+             boost::asio::buffer(receipt), remote_endpoint_,
+-            [this](boost::system::error_code /*ec*/, std::size_t /*bytes_transferred*/) {
++            [this](boost::system::error_code ) {
+                 socket_.close();
+             });
+     }
+ 
+     udp::socket socket_;
+     udp::endpoint remote_endpoint_;
+-    std::array<char, 65536> recv_buffer_;  // max UDP size
++    std::array<char, 65536> recv_buffer_;  
+     int total_size_;
+     int received_size_;
+     bool receipt_mode_;
+diff --git a/message_process/sucess_udp/udp_client.cpp b/message_process/sucess_udp/udp_client.cpp
+index c2c32e2..faf76a5 100644
+--- a/message_process/sucess_udp/udp_client.cpp
++++ b/message_process/sucess_udp/udp_client.cpp
+@@ -7,14 +7,14 @@ int main() {
+     int sockfd;
+     struct sockaddr_in serverAddr;
+ 
+-    // 创建UDP套接字
++    
+     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+     if (sockfd < 0) {
+         perror("socket");
+         return 1;
+     }
+ 
+-    // 设置服务器地址信息
++    
+     serverAddr.sin_family = AF_INET;
+     serverAddr.sin_port = htons(8888);
+     inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+@@ -22,11 +22,11 @@ int main() {
+     while (true) {
+         std::string message;
+ 
+-        // 输入消息
++        
+         std::cout << "Enter message: ";
+         std::getline(std::cin, message);
+ 
+-        // 发送消息
++        
+         int numBytes = sendto(sockfd, message.c_str(), message.length(), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+         if (numBytes < 0) {
+             perror("sendto");
+diff --git a/message_process/sucess_udp/udp_server.cpp b/message_process/sucess_udp/udp_server.cpp
+index 43e0a0c..cb3e821 100644
+--- a/message_process/sucess_udp/udp_server.cpp
++++ b/message_process/sucess_udp/udp_server.cpp
+@@ -10,14 +10,14 @@ void receiveMessages() {
+     socklen_t addrLen = sizeof(clientAddr);
+     char buffer[1024];
+ 
+-    // 创建UDP套接字
++    
+     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+     if (sockfd < 0) {
+         perror("socket");
+         return;
+     }
+ 
+-    // 绑定UDP套接字到本地IP和端口
++    
+     serverAddr.sin_family = AF_INET;
+     serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+     serverAddr.sin_port = htons(8888);
+@@ -31,14 +31,14 @@ void receiveMessages() {
+     std::cout << "UDP server listening on port 8888..." << std::endl;
+ 
+     while (true) {
+-        // 接收消息
++        
+         int numBytes = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&clientAddr, &addrLen);
+         if (numBytes < 0) {
+             perror("recvfrom");
+             continue;
+         }
+ 
+-        // 处理接收到的消息
++        
+         std::string message(buffer, numBytes);
+         std::cout << "Received message from " << inet_ntoa(clientAddr.sin_addr) << ": " << message << std::endl;
+     }
+@@ -47,10 +47,10 @@ void receiveMessages() {
+ }
+ 
+ int main() {
+-    // 启动接收消息的线程
++    
+     std::thread receiverThread(receiveMessages);
+ 
+-    // 等待接收线程结束
++    
+     receiverThread.join();
+ 
+     return 0;
+diff --git a/message_process/udp_client.cpp b/message_process/udp_client.cpp
+index f58dd74..1a09640 100644
+--- a/message_process/udp_client.cpp
++++ b/message_process/udp_client.cpp
+@@ -6,7 +6,7 @@
+ using boost::asio::ip::udp;
+ 
+ const int PACKET_SIZE = 1024;
+-const int TOTAL_DATA_SIZE = 12000;  // Total size of the data to be sent
++const int TOTAL_DATA_SIZE = 12000;  
+ 
+ class UDPClient {
+ public:
+@@ -16,28 +16,28 @@ public:
+         udp::endpoint receiver_endpoint = *resolver.resolve({udp::v4(), host, port});
+         socket_.open(udp::v4());
+ 
+-        std::string data(TOTAL_DATA_SIZE, 'x');  // Create a string of 12000 characters
++        std::string data(TOTAL_DATA_SIZE, 'x');  
+         std::vector<char> send_buffer;
+ 
+-        // Insert data length at the beginning of the buffer
++        
+         int data_length = static_cast<int>(data.size());
+         for (int i = 0; i < sizeof(data_length); ++i) {
+             send_buffer.push_back(reinterpret_cast<char*>(&data_length)[i]);
+         }
+ 
+-        // Insert the actual data
++        
+         for (const auto& ch : data) {
+             send_buffer.push_back(ch);
+         }
+ 
+-        // Send data in packets of PACKET_SIZE
++        
+         for (size_t i = 0; i < send_buffer.size(); i += PACKET_SIZE) {
+             std::vector<char> packet(send_buffer.begin() + i, 
+                 send_buffer.begin() + std::min(send_buffer.size(), i + PACKET_SIZE));
+             socket_.send_to(boost::asio::buffer(packet), receiver_endpoint);
+         }
+ 
+-        // Start asynchronous receive for receipt from the server
++        
+         start_receive();
+     }
+ 
+diff --git a/message_process/udp_server.cpp b/message_process/udp_server.cpp
+index a1223d3..a49d72e 100644
+--- a/message_process/udp_server.cpp
++++ b/message_process/udp_server.cpp
+@@ -4,7 +4,7 @@
+ 
+ using boost::asio::ip::udp;
+ 
+-const int HEADER_SIZE = 4;  // 4 bytes = 32 bits
++const int HEADER_SIZE = 4;  
+ 
+ class UDPServer {
+ public:
+@@ -21,7 +21,7 @@ private:
+             [this](boost::system::error_code ec, std::size_t bytes_transferred) {
+                 if (!ec) {
+                     if (total_size_ == 0 && bytes_transferred >= HEADER_SIZE) {
+-                        // Parse the header to get the total size
++                        
+                         total_size_ = *reinterpret_cast<int*>(recv_buffer_.data());
+                         received_size_ += bytes_transferred - HEADER_SIZE;
+                     } else {
+@@ -49,14 +49,14 @@ private:
+ 	std::cout << "send receipt =" << receipt << "\n";
+         socket_.async_send_to(
+             boost::asio::buffer(receipt), remote_endpoint_,
+-            [this](boost::system::error_code /*ec*/, std::size_t /*bytes_transferred*/) {
++            [this](boost::system::error_code ) {
+                 socket_.close();
+             });
+     }
+ 
+     udp::socket socket_;
+     udp::endpoint remote_endpoint_;
+-    std::array<char, 65536> recv_buffer_;  // max UDP size
++    std::array<char, 65536> recv_buffer_;  
+     int total_size_;
+     int received_size_;
+     bool receipt_mode_;
+diff --git a/message_process/unix_client_send_cmd.cpp b/message_process/unix_client_send_cmd.cpp
+index cc7fd37..7ff922b 100644
+--- a/message_process/unix_client_send_cmd.cpp
++++ b/message_process/unix_client_send_cmd.cpp
+@@ -4,16 +4,10 @@
+ #include <unistd.h>
+ #include <string>
+ #include "common_head.h"
+-/*
+-// 定义命令信息数据结构
+-struct Command {
+-    std::string action; // 动作
+-    int behaviorTreeID; // 行为树ID
+-};
+-*/
++
+ 
+ int main() {
+-    // 创建Unix域套接字
++    
+     int sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (sockfd == -1) {
+         perror("socket");
+@@ -22,32 +16,32 @@ int main() {
+ 
+     sockaddr_un server_addr;
+     server_addr.sun_family = AF_UNIX;
+-    strcpy(server_addr.sun_path, UNIX_SRV_PATH); // 服务器的Unix域套接字文件路径
++    strcpy(server_addr.sun_path, UNIX_SRV_PATH); 
+ 
+-    // 连接到服务器
++    
+     if (connect(sockfd, (sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+         perror("connect");
+         close(sockfd);
+         return 1;
+     }
+ 
+-    // 假设接收到的消息内容包含动作和行为树ID
+-    //std::string action = "run";
++    
++    
+     unsigned int action = 1;
+     unsigned int behaviorTreeID = 0;
+ 
+-    // 构造命令信息
++    
+     Command cmd;
+     cmd.action = action;
+     cmd.behaviorTreeID = behaviorTreeID;
+     std::cout << "send len=" << sizeof(cmd) << "\n";
+ 
+-    // 发送命令信息到服务器
++    
+     if (send(sockfd, &cmd, sizeof(cmd), 0) == -1) {
+         perror("send");
+     }
+ 
+-    // 关闭套接字
++    
+     close(sockfd);
+ 
+     return 0;
+diff --git a/message_process/unix_server_rcv_cmd.cpp b/message_process/unix_server_rcv_cmd.cpp
+index 8ee8a1d..3a29176 100644
+--- a/message_process/unix_server_rcv_cmd.cpp
++++ b/message_process/unix_server_rcv_cmd.cpp
+@@ -3,14 +3,14 @@
+ #include <sys/un.h>
+ #include <unistd.h>
+ 
+-// 定义命令信息数据结构
++
+ struct Command {
+-    std::string action; // 动作
+-    int behaviorTreeID; // 行为树ID
++    std::string action; 
++    int behaviorTreeID; 
+ };
+ 
+ int main() {
+-    // 创建Unix域套接字
++    
+     int server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (server_fd == -1) {
+         perror("socket");
+@@ -19,16 +19,16 @@ int main() {
+ 
+     sockaddr_un server_addr;
+     server_addr.sun_family = AF_UNIX;
+-    strcpy(server_addr.sun_path, "/tmp/unix_socket_server"); // 服务器的Unix域套接字文件路径
++    strcpy(server_addr.sun_path, "/tmp/unix_socket_server"); 
+ 
+-    // 绑定套接字到指定地址
++    
+     if (bind(server_fd, (sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+         perror("bind");
+         close(server_fd);
+         return 1;
+     }
+ 
+-    // 监听连接
++    
+     if (listen(server_fd, 1) == -1) {
+         perror("listen");
+         close(server_fd);
+@@ -40,7 +40,7 @@ int main() {
+     sockaddr_un client_addr;
+     socklen_t client_addr_len = sizeof(client_addr);
+ 
+-    // 接受客户端连接
++    
+     int client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_addr_len);
+     if (client_fd == -1) {
+         perror("accept");
+@@ -50,16 +50,16 @@ int main() {
+ 
+     std::cout << "Client connected" << std::endl;
+ 
+-    // 接收命令信息
++    
+     Command cmd;
+     if (recv(client_fd, &cmd, sizeof(cmd), 0) == -1) {
+         perror("recv");
+     } else {
+-        // 解析命令信息
++        
+         std::cout << "Received command: " << cmd.action << " " << cmd.behaviorTreeID << std::endl;
+     }
+ 
+-    // 关闭套接字
++    
+     close(client_fd);
+     close(server_fd);
+ 
+diff --git a/message_process/unix_sock_client.cpp b/message_process/unix_sock_client.cpp
+index 219b090..9dc8b4f 100644
+--- a/message_process/unix_sock_client.cpp
++++ b/message_process/unix_sock_client.cpp
+@@ -1,4 +1,4 @@
+-// Unix套接字客户端示例代码
++
+ 
+ #include <iostream>
+ #include <cstring>
+@@ -7,27 +7,27 @@
+ #include <unistd.h>
+ 
+ int main() {
+-    // 创建套接字
++    
+     int clientSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (clientSocket == -1) {
+         std::cerr << "Failed to create client socket" << std::endl;
+         return 1;
+     }
+ 
+-    // 配置服务器套接字地址
++    
+     struct sockaddr_un serverAddr;
+     memset(&serverAddr, 0, sizeof(serverAddr));
+     serverAddr.sun_family = AF_UNIX;
+     strncpy(serverAddr.sun_path, "/tmp/my_socket", sizeof(serverAddr.sun_path) - 1);
+ 
+-    // 连接到服务器
++    
+     if (connect(clientSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
+         std::cerr << "Failed to connect to server" << std::endl;
+         close(clientSocket);
+         return 1;
+     }
+ 
+-    // 数据通信
++    
+     const char* message = "Hello, server!";
+     ssize_t bytesSent = send(clientSocket, message, strlen(message), 0);
+     if (bytesSent == -1) {
+@@ -39,10 +39,10 @@ int main() {
+     ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+     if (bytesRead > 0) {
+         std::cout << "Received: " << buffer << std::endl;
+-        // 处理接收到的数据
++        
+     }
+ 
+-    // 关闭套接字
++    
+     close(clientSocket);
+ 
+     return 0;
+diff --git a/message_process/unix_sock_run_process/common_head.h b/message_process/unix_sock_run_process/common_head.h
+index 09588f3..cc2b5c0 100644
+--- a/message_process/unix_sock_run_process/common_head.h
++++ b/message_process/unix_sock_run_process/common_head.h
+@@ -3,11 +3,11 @@
+ 
+ #include <string>
+ 
+-// 定义命令信息数据结构
++
+ struct Command {
+-    unsigned int action; // 动作
+-    unsigned int behaviorTreeID; // 行为树ID
++    unsigned int action; 
++    unsigned int behaviorTreeID; 
+ };
+ #define UNIX_SRV_PATH "/tmp/my_socket"
+ 
+-#endif // COMMAND_H
++#endif 
+diff --git a/message_process/unix_sock_run_process/msg_process.cpp b/message_process/unix_sock_run_process/msg_process.cpp
+index cbe656d..47430d5 100644
+--- a/message_process/unix_sock_run_process/msg_process.cpp
++++ b/message_process/unix_sock_run_process/msg_process.cpp
+@@ -6,7 +6,7 @@
+ #include <unistd.h>
+ #include <sys/types.h>
+ #include <sys/wait.h>
+-#include <vector> // 添加vector头文件
++#include <vector> 
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -23,12 +23,12 @@
+ namespace bp = boost::process;
+ 
+ bp::child runBinaryWithArgument2(const char* binaryPath, const char* argument) {
+-    // 在子进程中执行二进制程序
++    
+     bp::child c(bp::exe = binaryPath, bp::args = {argument});
+ 
+     std::cout << "run process pid=" << c.id() << "\n, running=" << c.running() << "\n";
+     c.wait();
+-    // 获取进程的退出状态
++    
+     if (!c.running()) {
+         std::cout << "The process has exited with status: " << c.exit_code() << std::endl;
+     }
+@@ -37,15 +37,15 @@ bp::child runBinaryWithArgument2(const char* binaryPath, const char* argument) {
+ }
+ 
+ 
+-// 封装的函数，启动一个二进制程序并传递一个参数
++
+ int runBinaryWithArgument(const char* binaryPath, const char* name, const char* argument) {
+     pid_t pid = fork();
+     if (pid == 0) {
+-        // 在子进程中执行二进制程序
++        
+         execlp(binaryPath, name, argument, nullptr);
+         exit(0);
+     } else if (pid > 0) {
+-        // 在父进程中等待子进程结束
++        
+         int status;
+         waitpid(pid, &status, 0);
+ 
+@@ -67,67 +67,63 @@ int runBinaryWithArgument(const char* binaryPath, const char* name, const char*
+     }
+ }
+ 
+-// 行为树路径数组
++
+ const std::vector<std::string> behaviorTreePaths = {
+     "/root/autodl-tmp/linux_c++/message_process/behavior_tree_style1",
+     "/root/autodl-tmp/linux_c++/message_process/behavior_tree_style2"
+ };
+ 
+-// 根据命令信息执行相应的行为树，并返回执行的行为树路径
++
+ std::string executeBehaviorTree(const Command& command) {
+     if (command.behaviorTreeID < behaviorTreePaths.size()) {
+         const std::string& behaviorTreePath = behaviorTreePaths[command.behaviorTreeID];
+-        // 这里执行行为树程序，您可以使用之前提供的函数来执行二进制程序
++        
+         std::cout << "Executing behavior tree at path: " << behaviorTreePath << std::endl;
+         return behaviorTreePath;
+     } else {
+         std::cerr << "Invalid behavior tree ID: " << command.behaviorTreeID << std::endl;
+-        return ""; // 返回空字符串表示未找到匹配的行为树
++        return ""; 
+     }
+ }
+ 
+ void* handleClient(void* clientSocket) {
+     int client = *(int*)clientSocket;
+     int bytesRead;
+-    //char buffer[256];
+-    //memset(buffer, 0, sizeof(buffer));
++    
++    
+ 
+     Command cmd;
+     bytesRead = recv(client, &cmd, sizeof(cmd), 0);
+     if (bytesRead == -1) {
+         perror("recv");
+     } else {
+-        // 解析命令信息
++        
+ 	std::cout << "receive len=" << bytesRead << "\n";
+         std::cout << "Received command: " << cmd.action << " " << cmd.behaviorTreeID << std::endl;
+-    	// 发送响应
++    	
+         const char* response = "Hello, client!";
+-        //send(client, response, strlen(response), 0);
++        
+     }
+     close(client);
+     free(clientSocket);
+ 
+     if (bytesRead > 0) {
+-	const char* argument1 = "1";        // 二进制程序1的参数
+-	/*
+-        const char* binary2Path = "/root/autodl-tmp/linux_c++/message_process/process_exit_example"; // 二进制程序2的路径
+-        const char* argument2 = "2";        // 二进制程序2的参数
+-        const char* name = "message_process";
+-	*/
+-	// 执行相应的行为树，并获取执行的行为树路径
+-    	std::string binary1Path = executeBehaviorTree(cmd); // 将binary1Path改为std::string类型
++	const char* argument1 = "1";        
++	
++	
++    	std::string binary1Path = executeBehaviorTree(cmd); 
+ 
+     	std::cout << "Executed behavior tree path: " << binary1Path << std::endl;
+     	const char* binary1PathChar = binary1Path.c_str();
+     	auto child = runBinaryWithArgument2(binary1PathChar, argument1);
+-    	//int result1 = runBinaryWithArgument(binary1PathChar, binary1PathChar, argument1);
++    	
+ 
+     } 
+     return NULL;
+ }
+ 
+ int run_unix_server() {
+-    // 创建套接字
++    
+     unlink(UNIX_SRV_PATH);
+     int serverSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (serverSocket == -1) {
+@@ -135,20 +131,20 @@ int run_unix_server() {
+         return 1;
+     }
+ 
+-    // 配置服务器套接字地址
++    
+     struct sockaddr_un serverAddr;
+     memset(&serverAddr, 0, sizeof(serverAddr));
+     serverAddr.sun_family = AF_UNIX;
+     strncpy(serverAddr.sun_path, UNIX_SRV_PATH, sizeof(serverAddr.sun_path) - 1);
+ 
+-    // 绑定套接字
++    
+     if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+         perror("Failed to bind server socket");
+         close(serverSocket);
+         return 1;
+     }
+ 
+-    // 监听连接
++    
+     if (listen(serverSocket, MAX_CLIENTS) == -1) {
+         perror("Failed to listen on server socket");
+         close(serverSocket);
+@@ -156,7 +152,7 @@ int run_unix_server() {
+     }
+ 
+     while (1) {
+-        // 接受连接
++        
+         int* clientSocket = (int*)malloc(sizeof(int));
+         if (clientSocket == NULL) {
+             perror("Failed to allocate memory");
+@@ -169,7 +165,7 @@ int run_unix_server() {
+             continue;
+         }
+ 
+-        // 创建线程处理客户端请求
++        
+         pthread_t tid;
+         if (pthread_create(&tid, NULL, handleClient, clientSocket) != 0) {
+             perror("Failed to create thread");
+@@ -187,29 +183,6 @@ int run_unix_server() {
+ }
+ int main() {
+     run_unix_server();
+-    /*
+-    const char* argument1 = "1";        // 二进制程序1的参数
+-
+-    const char* binary2Path = "/root/autodl-tmp/linux_c++/message_process/process_exit_example"; // 二进制程序2的路径
+-    const char* argument2 = "2";        // 二进制程序2的参数
+-    const char* name = "message_process";
+-    // 假设接收到的消息内容包含动作和行为树ID
+-    std::string action = "run";
+-    unsigned int behaviorTreeID = 0; // 假设行为树ID为0
+-
+-    // 构造命令信息
+-    Command cmd;
+-    cmd.action = action;
+-    cmd.behaviorTreeID = behaviorTreeID;
+-
+-    // 执行相应的行为树，并获取执行的行为树路径
+-    std::string binary1Path = executeBehaviorTree(cmd); // 将binary1Path改为std::string类型
+-
+-    std::cout << "Executed behavior tree path: " << binary1Path << std::endl;
+-    const char* binary1PathChar = binary1Path.c_str();
+-
+-    int result1 = runBinaryWithArgument(binary1PathChar, name, argument1);
+-    //int result2 = runBinaryWithArgument(binary2Path, name, argument2);
+-    */
++    
+     return 0;
+ }
+diff --git a/message_process/unix_sock_run_process/unix_client_send_cmd.cpp b/message_process/unix_sock_run_process/unix_client_send_cmd.cpp
+index cc7fd37..7ff922b 100644
+--- a/message_process/unix_sock_run_process/unix_client_send_cmd.cpp
++++ b/message_process/unix_sock_run_process/unix_client_send_cmd.cpp
+@@ -4,16 +4,10 @@
+ #include <unistd.h>
+ #include <string>
+ #include "common_head.h"
+-/*
+-// 定义命令信息数据结构
+-struct Command {
+-    std::string action; // 动作
+-    int behaviorTreeID; // 行为树ID
+-};
+-*/
++
+ 
+ int main() {
+-    // 创建Unix域套接字
++    
+     int sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (sockfd == -1) {
+         perror("socket");
+@@ -22,32 +16,32 @@ int main() {
+ 
+     sockaddr_un server_addr;
+     server_addr.sun_family = AF_UNIX;
+-    strcpy(server_addr.sun_path, UNIX_SRV_PATH); // 服务器的Unix域套接字文件路径
++    strcpy(server_addr.sun_path, UNIX_SRV_PATH); 
+ 
+-    // 连接到服务器
++    
+     if (connect(sockfd, (sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+         perror("connect");
+         close(sockfd);
+         return 1;
+     }
+ 
+-    // 假设接收到的消息内容包含动作和行为树ID
+-    //std::string action = "run";
++    
++    
+     unsigned int action = 1;
+     unsigned int behaviorTreeID = 0;
+ 
+-    // 构造命令信息
++    
+     Command cmd;
+     cmd.action = action;
+     cmd.behaviorTreeID = behaviorTreeID;
+     std::cout << "send len=" << sizeof(cmd) << "\n";
+ 
+-    // 发送命令信息到服务器
++    
+     if (send(sockfd, &cmd, sizeof(cmd), 0) == -1) {
+         perror("send");
+     }
+ 
+-    // 关闭套接字
++    
+     close(sockfd);
+ 
+     return 0;
+diff --git a/message_process/unix_sock_server.cpp b/message_process/unix_sock_server.cpp
+index 4b830a3..c6ee3e8 100644
+--- a/message_process/unix_sock_server.cpp
++++ b/message_process/unix_sock_server.cpp
+@@ -1,4 +1,4 @@
+-// Unix套接字服务器示例代码
++
+ 
+ #include <iostream>
+ #include <cstring>
+@@ -7,34 +7,34 @@
+ #include <unistd.h>
+ 
+ int main() {
+-    // 创建套接字
++    
+     int serverSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (serverSocket == -1) {
+         std::cerr << "Failed to create server socket" << std::endl;
+         return 1;
+     }
+ 
+-    // 配置服务器套接字地址
++    
+     struct sockaddr_un serverAddr;
+     memset(&serverAddr, 0, sizeof(serverAddr));
+     serverAddr.sun_family = AF_UNIX;
+     strncpy(serverAddr.sun_path, "/tmp/my_socket", sizeof(serverAddr.sun_path) - 1);
+ 
+-    // 绑定套接字
++    
+     if (bind(serverSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
+         std::cerr << "Failed to bind server socket" << std::endl;
+         close(serverSocket);
+         return 1;
+     }
+ 
+-    // 监听连接
++    
+     if (listen(serverSocket, 5) == -1) {
+         std::cerr << "Failed to listen on server socket" << std::endl;
+         close(serverSocket);
+         return 1;
+     }
+ 
+-    // 接受连接
++    
+     int clientSocket = accept(serverSocket, nullptr, nullptr);
+     if (clientSocket == -1) {
+         std::cerr << "Failed to accept client connection" << std::endl;
+@@ -42,15 +42,15 @@ int main() {
+         return 1;
+     }
+ 
+-    // 数据通信
++    
+     char buffer[256];
+     memset(buffer, 0, sizeof(buffer));
+     ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+     if (bytesRead > 0) {
+         std::cout << "Received: " << buffer << std::endl;
+-        // 处理接收到的数据
++        
+ 
+-        // 发送响应
++        
+         const char* response = "Hello, client!";
+         ssize_t bytesSent = send(clientSocket, response, strlen(response), 0);
+         if (bytesSent == -1) {
+@@ -58,11 +58,11 @@ int main() {
+         }
+     }
+ 
+-    // 关闭套接字
++    
+     close(clientSocket);
+     close(serverSocket);
+ 
+-    // 删除套接字文件
++    
+     unlink("/tmp/my_socket");
+ 
+     return 0;
+diff --git a/message_process/unix_sock_server_thread.cpp b/message_process/unix_sock_server_thread.cpp
+index 0c9afd1..c12232a 100644
+--- a/message_process/unix_sock_server_thread.cpp
++++ b/message_process/unix_sock_server_thread.cpp
+@@ -1,4 +1,4 @@
+-// Unix套接字服务器示例代码
++
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -18,9 +18,9 @@ void* handleClient(void* clientSocket) {
+     ssize_t bytesRead = recv(client, buffer, sizeof(buffer) - 1, 0);
+     if (bytesRead > 0) {
+         printf("Received from client: %s\n", buffer);
+-        // 处理客户端请求
++        
+ 
+-        // 发送响应
++        
+         const char* response = "Hello, client!";
+         send(client, response, strlen(response), 0);
+     }
+@@ -31,27 +31,27 @@ void* handleClient(void* clientSocket) {
+ }
+ 
+ int main() {
+-    // 创建套接字
++    
+     int serverSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (serverSocket == -1) {
+         perror("Failed to create server socket");
+         return 1;
+     }
+ 
+-    // 配置服务器套接字地址
++    
+     struct sockaddr_un serverAddr;
+     memset(&serverAddr, 0, sizeof(serverAddr));
+     serverAddr.sun_family = AF_UNIX;
+     strncpy(serverAddr.sun_path, "/tmp/my_socket", sizeof(serverAddr.sun_path) - 1);
+ 
+-    // 绑定套接字
++    
+     if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+         perror("Failed to bind server socket");
+         close(serverSocket);
+         return 1;
+     }
+ 
+-    // 监听连接
++    
+     if (listen(serverSocket, MAX_CLIENTS) == -1) {
+         perror("Failed to listen on server socket");
+         close(serverSocket);
+@@ -59,7 +59,7 @@ int main() {
+     }
+ 
+     while (1) {
+-        // 接受连接
++        
+         int* clientSocket = (int*)malloc(sizeof(int));
+         if (clientSocket == NULL) {
+             perror("Failed to allocate memory");
+@@ -72,7 +72,7 @@ int main() {
+             continue;
+         }
+ 
+-        // 创建线程处理客户端请求
++        
+         pthread_t tid;
+         if (pthread_create(&tid, NULL, handleClient, clientSocket) != 0) {
+             perror("Failed to create thread");
+diff --git a/message_process/unix_sock_udp_processes/common_head.h b/message_process/unix_sock_udp_processes/common_head.h
+index 7cedf83..926d78b 100644
+--- a/message_process/unix_sock_udp_processes/common_head.h
++++ b/message_process/unix_sock_udp_processes/common_head.h
+@@ -18,8 +18,8 @@
+ #include <boost/serialization/access.hpp>
+ 
+ struct Command {
+-    unsigned int action; // 动作
+-    unsigned int behaviorTreeID; // 行为树ID
++    unsigned int action; 
++    unsigned int behaviorTreeID; 
+ 
+     template<class Archive>
+     void serialize(Archive & ar, const unsigned int version)
+@@ -29,10 +29,10 @@ struct Command {
+     }
+ };
+ 
+-const int HEADER_SIZE = sizeof(int);  // 4 bytes = 32 bits
++const int HEADER_SIZE = sizeof(int);  
+ 
+ using boost::asio::ip::udp;
+-// Define a function type for the callback
++
+ using DataReceivedCallback = std::function<void(const Command&)>;
+ 
+ class UDPServer {
+@@ -69,7 +69,7 @@ private:
+                 if (!ec) {
+                     if (total_size_ == 0 && bytes_transferred >= HEADER_SIZE) {
+                         total_size_ = *reinterpret_cast<int*>(recv_buffer_.data());
+-                        //received_size_ += bytes_transferred - HEADER_SIZE;
++                        
+ 			received_size_ += bytes_transferred;
+ 			std::cout << "received_size_=" << received_size_ << "bytes_transferred=" << bytes_transferred << " total_size_=" << total_size_ << "\n";
+                     } else {
+@@ -83,7 +83,7 @@ private:
+                         Command cmd;
+                         archive >> cmd;
+ 			std::cout << "received_size_=" << received_size_ << " total_size_=" << total_size_ << "\n";
+-                        // Call the callback if it is set
++                        
+                         if (callback_) {
+                             callback_(cmd);
+                         }
+@@ -100,24 +100,24 @@ private:
+             });
+     }
+ 
+-    // send_receipt() stays the same ...
++    
+     void send_receipt() {
+         std::string receipt = "Received: " + std::to_string(received_size_) + " Sent: " + std::to_string(total_size_);
+ 	std::cout << "send receipt =" << receipt << "\n";
+         socket_.async_send_to(
+             boost::asio::buffer(receipt), remote_endpoint_,
+-            [this](boost::system::error_code /*ec*/, std::size_t /*bytes_transferred*/) {
++            [this](boost::system::error_code ) {
+                 socket_.close();
+             });
+     }
+ 
+     udp::socket socket_;
+     udp::endpoint remote_endpoint_;
+-    std::array<char, 65536> recv_buffer_;  // max UDP size
++    std::array<char, 65536> recv_buffer_;  
+     int total_size_;
+     int received_size_;
+     bool receipt_mode_;
+-    DataReceivedCallback callback_;  // Add a callback for data received
++    DataReceivedCallback callback_;  
+ };
+ 
+ 
+@@ -154,7 +154,7 @@ public:
+         } else {
+             std::cerr << "Failed to send command: " << ec.message() << "\n";
+         }
+-        // Start asynchronous receive for receipt from the server
++        
+         start_receive();
+     }
+ 
+@@ -177,4 +177,4 @@ private:
+     udp::resolver resolver_;
+ };
+ 
+-#endif // COMMAND_H
++#endif 
+diff --git a/message_process/unix_sock_udp_processes/udp_client.cpp b/message_process/unix_sock_udp_processes/udp_client.cpp
+index f58dd74..1a09640 100644
+--- a/message_process/unix_sock_udp_processes/udp_client.cpp
++++ b/message_process/unix_sock_udp_processes/udp_client.cpp
+@@ -6,7 +6,7 @@
+ using boost::asio::ip::udp;
+ 
+ const int PACKET_SIZE = 1024;
+-const int TOTAL_DATA_SIZE = 12000;  // Total size of the data to be sent
++const int TOTAL_DATA_SIZE = 12000;  
+ 
+ class UDPClient {
+ public:
+@@ -16,28 +16,28 @@ public:
+         udp::endpoint receiver_endpoint = *resolver.resolve({udp::v4(), host, port});
+         socket_.open(udp::v4());
+ 
+-        std::string data(TOTAL_DATA_SIZE, 'x');  // Create a string of 12000 characters
++        std::string data(TOTAL_DATA_SIZE, 'x');  
+         std::vector<char> send_buffer;
+ 
+-        // Insert data length at the beginning of the buffer
++        
+         int data_length = static_cast<int>(data.size());
+         for (int i = 0; i < sizeof(data_length); ++i) {
+             send_buffer.push_back(reinterpret_cast<char*>(&data_length)[i]);
+         }
+ 
+-        // Insert the actual data
++        
+         for (const auto& ch : data) {
+             send_buffer.push_back(ch);
+         }
+ 
+-        // Send data in packets of PACKET_SIZE
++        
+         for (size_t i = 0; i < send_buffer.size(); i += PACKET_SIZE) {
+             std::vector<char> packet(send_buffer.begin() + i, 
+                 send_buffer.begin() + std::min(send_buffer.size(), i + PACKET_SIZE));
+             socket_.send_to(boost::asio::buffer(packet), receiver_endpoint);
+         }
+ 
+-        // Start asynchronous receive for receipt from the server
++        
+         start_receive();
+     }
+ 
+diff --git a/message_process/unix_sock_udp_processes/udp_server.cpp b/message_process/unix_sock_udp_processes/udp_server.cpp
+index a1223d3..a49d72e 100644
+--- a/message_process/unix_sock_udp_processes/udp_server.cpp
++++ b/message_process/unix_sock_udp_processes/udp_server.cpp
+@@ -4,7 +4,7 @@
+ 
+ using boost::asio::ip::udp;
+ 
+-const int HEADER_SIZE = 4;  // 4 bytes = 32 bits
++const int HEADER_SIZE = 4;  
+ 
+ class UDPServer {
+ public:
+@@ -21,7 +21,7 @@ private:
+             [this](boost::system::error_code ec, std::size_t bytes_transferred) {
+                 if (!ec) {
+                     if (total_size_ == 0 && bytes_transferred >= HEADER_SIZE) {
+-                        // Parse the header to get the total size
++                        
+                         total_size_ = *reinterpret_cast<int*>(recv_buffer_.data());
+                         received_size_ += bytes_transferred - HEADER_SIZE;
+                     } else {
+@@ -49,14 +49,14 @@ private:
+ 	std::cout << "send receipt =" << receipt << "\n";
+         socket_.async_send_to(
+             boost::asio::buffer(receipt), remote_endpoint_,
+-            [this](boost::system::error_code /*ec*/, std::size_t /*bytes_transferred*/) {
++            [this](boost::system::error_code ) {
+                 socket_.close();
+             });
+     }
+ 
+     udp::socket socket_;
+     udp::endpoint remote_endpoint_;
+-    std::array<char, 65536> recv_buffer_;  // max UDP size
++    std::array<char, 65536> recv_buffer_;  
+     int total_size_;
+     int received_size_;
+     bool receipt_mode_;
+diff --git a/message_process/unix_sock_udp_processes/udp_unix_sock_rcv.cpp b/message_process/unix_sock_udp_processes/udp_unix_sock_rcv.cpp
+index 397bb91..58334ea 100644
+--- a/message_process/unix_sock_udp_processes/udp_unix_sock_rcv.cpp
++++ b/message_process/unix_sock_udp_processes/udp_unix_sock_rcv.cpp
+@@ -28,6 +28,6 @@ int main(int argc, char* argv[]) {
+         std::cerr << "Exception: " << e.what() << "\n";
+     }
+ 
+-        // ...
++        
+ }
+ 
+diff --git a/message_queue/btree_monitor.cpp b/message_queue/btree_monitor.cpp
+index 5f367f0..7ceffdb 100644
+--- a/message_queue/btree_monitor.cpp
++++ b/message_queue/btree_monitor.cpp
+@@ -74,12 +74,12 @@ private:
+ 
+ void btree_execute(BtTaskManager &manager, unsigned int task_uuid, unsigned int bt_id) {
+     try {
+-        // Here is where you would add the actual execution of the behavior tree
++        
+         std::cout << "Executing behavior tree with id: " << bt_id << std::endl;
+         std::this_thread::sleep_for(std::chrono::seconds(1));
+         manager.updateTaskStatus(task_uuid, FINISHED);
+     } catch (...) {
+-        // If an error occurs, update the status to ERROR
++        
+         manager.updateTaskStatus(task_uuid, ERROR);
+     }
+ }
+@@ -87,15 +87,15 @@ void btree_execute(BtTaskManager &manager, unsigned int task_uuid, unsigned int
+ int main() {
+     BtTaskManager manager;
+ 
+-    // Add a new task
++    
+     unsigned int task_uuid = manager.addTask(1, [&]() { btree_execute(manager, 1, 10); });
+ 
+-    // Get task status
++    
+     BtTaskStatus status = manager.getTaskStatus(task_uuid);
+     std::cout << "Task " << status.task_uuid << " with bt_id " << status.bt_id << " is currently "
+               << (status.status == RUNNING ? "running" : "not running") << std::endl;
+ 
+-    // Let's update task status and then remove it
++    
+     manager.updateTaskStatus(task_uuid, FINISHED);
+     status = manager.getTaskStatus(task_uuid);
+     std::cout << "Task " << status.task_uuid << " with bt_id " << status.bt_id << " is currently "
+diff --git a/message_queue/btree_monitor_module.cpp b/message_queue/btree_monitor_module.cpp
+index ece735c..939fff2 100644
+--- a/message_queue/btree_monitor_module.cpp
++++ b/message_queue/btree_monitor_module.cpp
+@@ -57,7 +57,7 @@ public:
+         }
+ 	std::cerr << "Invalid task uuid" << std::endl;
+ 	return BtTaskStatus();
+-        //throw std::invalid_argument("Invalid task uuid");
++        
+     }
+ 
+     void removeTask(unsigned int task_uuid) {
+@@ -67,7 +67,7 @@ public:
+             threads_.erase(task_uuid);
+         } else {
+ 	    std::cerr << "Invalid task uuid" << std::endl;
+-            //throw std::invalid_argument("Invalid task uuid");
++            
+         }
+     }
+ 
+@@ -77,7 +77,7 @@ public:
+             tasks_[task_uuid].status = new_status;
+         } else {
+ 	    std::cerr << "Invalid task uuid" << std::endl;
+-            //throw std::invalid_argument("Invalid task uuid");
++            
+         }
+     }
+ private:
+@@ -90,12 +90,12 @@ private:
+ 
+ void btree_execute(BtTaskManager &manager, unsigned int task_uuid, unsigned int bt_id) {
+     try {
+-        // Here is where you would add the actual execution of the behavior tree
++        
+         std::cout << "Executing behavior tree with id: " << bt_id << std::endl;
+         std::this_thread::sleep_for(std::chrono::seconds(1));
+         manager.updateTaskStatus(task_uuid, FINISHED);
+     } catch (...) {
+-        // If an error occurs, update the status to ERROR
++        
+         manager.updateTaskStatus(task_uuid, ERROR);
+     }
+ }
+@@ -133,15 +133,15 @@ int btree_monitor_process(Message &msg) {
+     BtTaskManager manager;
+     unsigned int req_id = msg.req_id;
+     unsigned int bt_id = 10;
+-    // Add a new task
++    
+     unsigned int task_uuid = manager.addTask(req_id, [&]() { btree_execute(manager, req_id, bt_id); });
+ 
+-    // Get task status
++    
+     BtTaskStatus status = manager.getTaskStatus(task_uuid);
+     std::cout << "Task " << status.task_uuid << " with bt_id " << status.bt_id << " is currently "
+               << (status.status == RUNNING ? "running" : "not running") << std::endl;
+ 
+-    // Let's update task status and then remove it
++    
+     manager.updateTaskStatus(task_uuid, FINISHED);
+     status = manager.getTaskStatus(task_uuid);
+     std::cout << "Task " << status.task_uuid << " with bt_id " << status.bt_id << " is currently "
+@@ -154,7 +154,7 @@ int btree_monitor_process(Message &msg) {
+ int main() {
+     MessageQueue queue;
+ 
+-    // Data management thread
++    
+     std::thread producer([&]() {
+         for (unsigned int i = 0; i < 10; ++i) {
+             Message message{i, "request_" + std::to_string(i)};
+@@ -164,7 +164,7 @@ int main() {
+         }
+     });
+ 
+-    // Behavior tree scheduling thread
++    
+     std::thread consumer([&]() {
+         for (unsigned int i = 0; i < 10; ++i) {
+             Message message = queue.pop();
+diff --git a/message_queue/message_queue.cpp b/message_queue/message_queue.cpp
+index 020015e..5055211 100644
+--- a/message_queue/message_queue.cpp
++++ b/message_queue/message_queue.cpp
+@@ -35,7 +35,7 @@ private:
+ int main() {
+     MessageQueue queue;
+ 
+-    // Data management thread
++    
+     std::thread producer([&]() {
+         for (unsigned int i = 0; i < 10; ++i) {
+             Message message{i, "request_" + std::to_string(i)};
+@@ -45,7 +45,7 @@ int main() {
+         }
+     });
+ 
+-    // Behavior tree scheduling thread
++    
+     std::thread consumer([&]() {
+         for (unsigned int i = 0; i < 10; ++i) {
+             Message message = queue.pop();
+diff --git a/msg_process_multiple/msg_process.cpp b/msg_process_multiple/msg_process.cpp
+index 5b340e6..a9cdfb4 100644
+--- a/msg_process_multiple/msg_process.cpp
++++ b/msg_process_multiple/msg_process.cpp
+@@ -19,7 +19,7 @@ private:
+     int port_;
+ };
+ 
+-#endif // UDP_COMMUNICATOR_H
++#endif 
+ 
+ 
+ #ifndef COMMAND_DISPATCHER_H
+@@ -40,7 +40,7 @@ private:
+     std::map<std::string, CommandHandler> commandHandlers_;
+ };
+ 
+-#endif // COMMAND_DISPATCHER_H
++#endif 
+ 
+ #ifndef BEHAVIOR_NODE_H
+ #define BEHAVIOR_NODE_H
+@@ -51,7 +51,7 @@ public:
+     virtual bool execute() = 0;
+ };
+ 
+-#endif // BEHAVIOR_NODE_H
++#endif 
+ 
+ #ifndef EXCEPTION_HANDLER_H
+ #define EXCEPTION_HANDLER_H
+@@ -61,7 +61,7 @@ public:
+     void handleException(const std::exception& ex);
+ };
+ 
+-#endif // EXCEPTION_HANDLER_H
++#endif 
+ 
+ #ifndef PLUGIN_INTERFACE_H
+ #define PLUGIN_INTERFACE_H
+@@ -72,7 +72,7 @@ public:
+     virtual void execute() = 0;
+ };
+ 
+-#endif // PLUGIN_INTERFACE_H
++#endif 
+ 
+ 
+ #ifndef PLUGIN_MANAGER_H
+@@ -91,7 +91,7 @@ private:
+     std::map<std::string, PluginInterface*> plugins_;
+ };
+ 
+-#endif // PLUGIN_MANAGER_H
++#endif 
+ 
+ 
+ #ifndef EVENT_DISPATCHER_H
+@@ -112,7 +112,7 @@ private:
+     std::map<std::string, EventHandler> eventHandlers_;
+ };
+ 
+-#endif // EVENT_DISPATCHER_H
++#endif 
+ 
+ 
+ #ifndef CONFIG_MANAGER_H
+@@ -130,7 +130,7 @@ private:
+     std::map<std::string, std::string> configs_;
+ };
+ 
+-#endif // CONFIG_MANAGER_H
++#endif 
+ 
+ #ifndef UDP_COMMUNICATOR_H
+ #define UDP_COMMUNICATOR_H
+@@ -151,7 +151,7 @@ private:
+     int port_;
+ };
+ 
+-#endif // UDP_COMMUNICATOR_H
++#endif 
+ #ifndef DATA_MANAGER_H
+ #define DATA_MANAGER_H
+ 
+@@ -168,7 +168,7 @@ private:
+     std::map<std::string, std::string> memoryCache_;
+ };
+ 
+-#endif // DATA_MANAGER_H
++#endif 
+ 
+ 
+ #ifndef BEHAVIOR_TREE_H
+@@ -188,7 +188,7 @@ private:
+     BehaviorNode* root_;
+ };
+ 
+-#endif // BEHAVIOR_TREE_H
++#endif 
+ 
+ #ifndef DEVICE_STATUS_MANAGER_H
+ #define DEVICE_STATUS_MANAGER_H
+@@ -208,7 +208,7 @@ private:
+     std::map<std::string, DeviceStatus> statusMap_;
+ };
+ 
+-#endif // DEVICE_STATUS_MANAGER_H
++#endif 
+ 
+ 
+ #ifndef UDP_COMMUNICATOR_H
+@@ -233,7 +233,7 @@ private:
+     void handleReceive(const std::string& data);
+ };
+ 
+-#endif // UDP_COMMUNICATOR_H
++#endif 
+ 
+ #ifndef DATA_CODEC_H
+ #define DATA_CODEC_H
+@@ -255,7 +255,7 @@ public:
+ };
+ 
+ 
+-#endif // DATA_CODEC_H
++#endif 
+ 
+ 
+ #ifndef MESSAGE_QUEUE_H
+@@ -277,7 +277,7 @@ private:
+     std::condition_variable cv_;
+ };
+ 
+-#endif // MESSAGE_QUEUE_H
++#endif 
+ 
+ #ifndef TIMEOUT_MANAGER_H
+ #define TIMEOUT_MANAGER_H
+@@ -292,7 +292,7 @@ public:
+     void setTimeout(TimeoutCallback callback, std::chrono::milliseconds duration);
+ };
+ 
+-#endif // TIMEOUT_MANAGER_H
++#endif 
+ 
+ 
+ #ifndef COMMAND_CODEC_H
+@@ -316,7 +316,7 @@ public:
+     std::string decode(const std::string& encodedCommand) override;
+ };
+ 
+-#endif // COMMAND_CODEC_H
++#endif 
+ 
+ #ifndef EVENT_DISPATCHER_H
+ #define EVENT_DISPATCHER_H
+@@ -336,7 +336,7 @@ private:
+     std::unordered_map<std::string, EventHandler> eventHandlers_;
+ };
+ 
+-#endif // EVENT_DISPATCHER_H
++#endif 
+ 
+ #ifndef UDP_COMMUNICATOR_H
+ #define UDP_COMMUNICATOR_H
+@@ -355,7 +355,7 @@ private:
+     EventDispatcher& dispatcher_;
+ };
+ 
+-#endif // UDP_COMMUNICATOR_H
++#endif 
+ 
+ 
+ #ifndef BEHAVIOR_TREE_CONTROLLER_H
+@@ -368,7 +368,7 @@ public:
+     BehaviorTreeController(EventDispatcher& dispatcher);
+ };
+ 
+-#endif // BEHAVIOR_TREE_CONTROLLER_H
++#endif 
+ 
+ 
+ #include "UDPCommunicator.h"
+@@ -400,7 +400,7 @@ public:
+     virtual void handleData(const std::string& data) = 0;
+ };
+ 
+-#endif // PLUGIN_INTERFACE_H
++#endif 
+ 
+ 
+ #ifndef PLUGIN_MANAGER_H
+@@ -422,7 +422,7 @@ private:
+     std::map<std::string, void*> pluginHandles_;
+ };
+ 
+-#endif // PLUGIN_MANAGER_H
++#endif 
+ 
+ 
+ #include "PluginManager.h"
+@@ -946,7 +946,7 @@ public:
+ 
+     void executeTask(const Task& task) {
+         
+-        while(!shouldStop_ /* some condition */) {
++        while(!shouldStop_ ) {
+ 
+         }
+     }
+diff --git a/project_make/class_full.h b/project_make/class_full.h
+index 2fd68c9..6f2de3f 100644
+--- a/project_make/class_full.h
++++ b/project_make/class_full.h
+@@ -38,7 +38,7 @@ public:
+     void StopProcess();
+ 
+ private:
+-    // 保存子进程相关信息
++    
+ };
+ 
+ class ExceptionHandler
+diff --git a/project_make/include/command-handler/MessageHandler.h b/project_make/include/command-handler/MessageHandler.h
+index 3b5aecd..1213dea 100644
+--- a/project_make/include/command-handler/MessageHandler.h
++++ b/project_make/include/command-handler/MessageHandler.h
+@@ -1,4 +1,4 @@
+-// include/command-handler/MessageHandler.h
++
+ #pragma once
+ 
+ #include "Command.h"
+diff --git a/project_make/src/command-handler/CommandHandler.cpp b/project_make/src/command-handler/CommandHandler.cpp
+index 7b8e855..425edb4 100644
+--- a/project_make/src/command-handler/CommandHandler.cpp
++++ b/project_make/src/command-handler/CommandHandler.cpp
+@@ -2,7 +2,7 @@
+ #include <vector>
+ #include <iostream>
+ 
+-// 行为树路径数组
++
+ const std::vector<std::string> behaviorTreePaths = {
+     "/root/autodl-tmp/linux_c++/message_process/behavior_tree_style1",
+     "/root/autodl-tmp/linux_c++/message_process/behavior_tree_style2"
+@@ -11,11 +11,11 @@ const std::vector<std::string> behaviorTreePaths = {
+ std::string CommandHandler::executeBehaviorTree(const Command& command) {
+     if (command.behaviorTreeID < behaviorTreePaths.size()) {
+         const std::string& behaviorTreePath = behaviorTreePaths[command.behaviorTreeID];
+-        // 这里执行行为树程序，您可以使用之前提供的函数来执行二进制程序
++        
+         std::cout << "Executing behavior tree at path: " << behaviorTreePath << std::endl;
+         return behaviorTreePath;
+     } else {
+         std::cerr << "Invalid behavior tree ID: " << command.behaviorTreeID << std::endl;
+-        return ""; // 返回空字符串表示未找到匹配的行为树
++        return ""; 
+     }
+ }
+diff --git a/project_make/src/command-handler/MessageHandler.cpp b/project_make/src/command-handler/MessageHandler.cpp
+index 6cebb4f..cf20b5d 100644
+--- a/project_make/src/command-handler/MessageHandler.cpp
++++ b/project_make/src/command-handler/MessageHandler.cpp
+@@ -1,4 +1,4 @@
+-// src/command-handler/MessageHandler.cpp
++
+ #include "MessageHandler.h"
+ #include <iostream>
+ 
+@@ -7,16 +7,16 @@ MessageHandler::MessageHandler() {}
+ MessageHandler::~MessageHandler() {}
+ 
+ void MessageHandler::handleCommand(const Command& command) {
+-    // 原先的handleCommand代码
++    
+ }
+ 
+ bp::child MessageHandler::runBinaryWithArgument2(const char* binaryPath, const char* argument) {
+-    // 在子进程中执行二进制程序
++    
+     bp::child c(bp::exe = binaryPath, bp::args = {argument});
+ 
+     std::cout << "run process pid=" << c.id() << "\n, running=" << c.running() << "\n";
+     c.wait();
+-    // 获取进程的退出状态
++    
+     if (!c.running()) {
+         std::cout << "The process has exited with status: " << c.exit_code() << std::endl;
+     }
+@@ -24,6 +24,6 @@ bp::child MessageHandler::runBinaryWithArgument2(const char* binaryPath, const c
+     return c;
+ }
+ void MessageHandler::handleCommand(const Command& command) {
+-    // 处理command对象...
++    
+     auto child = this->runBinaryWithArgument2(binaryPath.c_str(), argument.c_str());
+ }
+diff --git a/project_make/src/unix_socket_server.cpp b/project_make/src/unix_socket_server.cpp
+index 0396a57..2a4f60b 100644
+--- a/project_make/src/unix_socket_server.cpp
++++ b/project_make/src/unix_socket_server.cpp
+@@ -2,7 +2,7 @@
+ #include "command_handler.h"
+ 
+ UnixSocketServer::UnixSocketServer(const std::string& path) : server_path_(path), server_socket_(-1) {
+-    // 创建套接字
++    
+     unlink(server_path_.c_str());
+     server_socket_ = socket(AF_UNIX, SOCK_STREAM, 0);
+     if (server_socket_ == -1) {
+@@ -10,20 +10,20 @@ UnixSocketServer::UnixSocketServer(const std::string& path) : server_path_(path)
+         throw std::runtime_error("Failed to create server socket");
+     }
+ 
+-    // 配置服务器套接字地址
++    
+     struct sockaddr_un serverAddr;
+     memset(&serverAddr, 0, sizeof(serverAddr));
+     serverAddr.sun_family = AF_UNIX;
+     strncpy(serverAddr.sun_path, server_path_.c_str(), sizeof(serverAddr.sun_path) - 1);
+ 
+-    // 绑定套接字
++    
+     if (bind(server_socket_, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+         perror("Failed to bind server socket");
+         close(server_socket_);
+         throw std::runtime_error("Failed to bind server socket");
+     }
+ 
+-    // 监听连接
++    
+     if (listen(server_socket_, MAX_CLIENTS) == -1) {
+         perror("Failed to listen on server socket");
+         close(server_socket_);
+@@ -38,7 +38,7 @@ UnixSocketServer::~UnixSocketServer() {
+ 
+ void UnixSocketServer::RunServer() {
+     while (1) {
+-        // 接受连接
++        
+         int* clientSocket = new int;
+         *clientSocket = accept(server_socket_, NULL, NULL);
+         if (*clientSocket == -1) {
+@@ -47,7 +47,7 @@ void UnixSocketServer::RunServer() {
+             continue;
+         }
+ 
+-        // 创建线程处理客户端请求
++        
+         pthread_t tid;
+         if (pthread_create(&tid, NULL, HandleClient, clientSocket) != 0) {
+             perror("Failed to create thread");
+diff --git a/project_make/src/unix_socket_server.h b/project_make/src/unix_socket_server.h
+index 7a51055..675cb07 100644
+--- a/project_make/src/unix_socket_server.h
++++ b/project_make/src/unix_socket_server.h
+@@ -20,4 +20,4 @@ private:
+     int server_socket_;
+ };
+ 
+-#endif //UNIX_SOCKET_SERVER_H
++#endif 
+diff --git a/server_file_test.cpp b/server_file_test.cpp
+index c742332..b48d9d5 100644
+--- a/server_file_test.cpp
++++ b/server_file_test.cpp
+@@ -11,7 +11,7 @@ void start_sending(tcp::socket &socket, const std::string &file_name) {
+ 		return;
+ 	}
+ 	file.seekg(0, std::ios::end);
+-	//size_t file_size = file.tellg();
++	
+ 	file.seekg(0, std::ios::beg);
+ 
+ 	boost::asio::streambuf buf;
+diff --git a/server_send_file.cpp b/server_send_file.cpp
+index bb0d97e..240b4cc 100644
+--- a/server_send_file.cpp
++++ b/server_send_file.cpp
+@@ -11,7 +11,7 @@ void start_sending(tcp::socket& socket, const std::string& file_name) {
+         return;
+     }
+ 
+-    // Get file size.
++    
+     file.seekg(0, std::ios::end);
+     size_t file_size = file.tellg();
+     file.seekg(0, std::ios::beg);
+@@ -19,7 +19,7 @@ void start_sending(tcp::socket& socket, const std::string& file_name) {
+     boost::asio::streambuf buf;
+     std::ostream out_stream(&buf);
+     out_stream << file.rdbuf();
+-    // Synchronous write for simplicity.
++    
+     boost::asio::write(socket, buf);
+ }
+ 
+@@ -30,7 +30,7 @@ int main() {
+         for (;;) {
+             tcp::socket socket(io_service);
+             acceptor.accept(socket);
+-            start_sending(socket, "file_to_send.txt");  // Put your file path here.
++            start_sending(socket, "file_to_send.txt");  
+         }
+     } catch (std::exception& e) {
+         std::cerr << "Exception: " << e.what() << "\n";
+diff --git a/server_send_file_test.cpp b/server_send_file_test.cpp
+index ae6f6a9..3ddc0be 100644
+--- a/server_send_file_test.cpp
++++ b/server_send_file_test.cpp
+@@ -1,7 +1,7 @@
+ #include <iostream>
+ #include <fstream>
+ #include <vector>
+-#include <iomanip>  // add this
++#include <iomanip>  
+ #include <boost/asio.hpp>
+ #include <openssl/md5.h>
+ 
+@@ -30,33 +30,33 @@ std::string get_file_md5(const std::string& file_name) {
+ void send_file(tcp::socket& socket, const std::string& file_name) {
+     std::ifstream file(file_name, std::ios::binary);
+ 
+-    // Check if the file was opened successfully.
++    
+     if (!file.is_open() || file.fail()) {
+         std::cerr << "Failed to open the file.\n";
+         return;
+     }
+ 
+-    // Get the file size.
++    
+     file.seekg(0, std::ios::end);
+     std::streamsize size = file.tellg();
+     file.seekg(0, std::ios::beg);
+ 
+-    // Read file into memory.
++    
+     std::vector<char> file_data(size);
+     if (!file.read(file_data.data(), size)) {
+         std::cerr << "Failed to read the file.\n";
+         return;
+     }
+ 
+-    // Calculate the MD5 of the file.
++    
+     std::string md5 = get_file_md5(file_name);
+     std::cout << "MD5 of the file to be sent: " << md5 << std::endl;
+     std::cout << "Size of the file to be sent: " << size << " bytes\n";
+ 
+-    // Send the MD5 to the client.
++    
+     boost::asio::write(socket, boost::asio::buffer(md5));
+ 
+-    // Then send the file data.
++    
+     std::size_t written = boost::asio::write(socket, boost::asio::buffer(file_data));
+ 
+     std::cout << "Written bytes: " << written << "\n";
+@@ -69,7 +69,7 @@ int main() {
+         for (;;) {
+             tcp::socket socket(io_service);
+             acceptor.accept(socket);
+-            send_file(socket, "file_to_send.bin");  // Replace with your file path.
++            send_file(socket, "file_to_send.bin");  
+         }
+     } catch (std::exception& e) {
+         std::cerr << "Exception: " << e.what() << "\n";
+diff --git a/shared_memory b/shared_memory
+deleted file mode 100755
+index b61aa66..0000000
+Binary files a/shared_memory and /dev/null differ
+diff --git a/shared_memory.cpp b/shared_memory.cpp
+index b72517e..1f4ecb7 100644
+--- a/shared_memory.cpp
++++ b/shared_memory.cpp
+@@ -1,6 +1,6 @@
+ #include <boost/interprocess/shared_memory_object.hpp>
+ #include <boost/interprocess/mapped_region.hpp>
+-#include <algorithm> // for std::count_if
++#include <algorithm> 
+ #include <iostream>
+ 
+ int main()
+diff --git a/sync_file_send_recv/client_send_file_test.cpp b/sync_file_send_recv/client_send_file_test.cpp
+index f84853c..8ff8bac 100644
+--- a/sync_file_send_recv/client_send_file_test.cpp
++++ b/sync_file_send_recv/client_send_file_test.cpp
+@@ -1,7 +1,7 @@
+ #include <iostream>
+ #include <fstream>
+ #include <vector>
+-#include <iomanip>  // add this
++#include <iomanip>  
+ #include <boost/asio.hpp>
+ #include <openssl/md5.h>
+ 
+@@ -29,20 +29,20 @@ std::string get_file_md5(const std::string& file_name) {
+ }
+ 
+ void receive_file(tcp::socket& socket, const std::string& file_name) {
+-    // Truncate the file if it already exists, create it if it does not.
++    
+     std::ofstream file(file_name, std::ios::binary | std::ios::trunc);
+ 
+-    // Check if the file was opened correctly.
++    
+     if (!file.is_open() || file.fail()) {
+         std::cerr << "Failed to open the file.\n";
+         return;
+     }
+ 
+-    // First receive the MD5 from the server.
++    
+     std::vector<char> md5(32);
+     boost::asio::read(socket, boost::asio::buffer(md5));
+ 
+-    // Then receive the file data.
++    
+     std::vector<char> file_data(1024);
+     size_t length;
+     size_t total_length = 0;
+@@ -51,14 +51,14 @@ void receive_file(tcp::socket& socket, const std::string& file_name) {
+             file.write(file_data.data(), length);
+             total_length += length;
+ 
+-            // Check if the write was successful.
++            
+             if (file.fail()) {
+                 std::cerr << "Failed to write to the file.\n";
+                 return;
+             }
+         }
+     } catch (const boost::system::system_error& ex) {
+-        // If we get an EOF error, it's expected, so don't report it.
++        
+         if (ex.code() != boost::asio::error::eof) {
+             std::cerr << "Read error: " << ex.what() << "\n";
+         }
+@@ -68,14 +68,14 @@ void receive_file(tcp::socket& socket, const std::string& file_name) {
+ 
+     std::cout << "Total bytes received: " << total_length << "\n";
+ 
+-    // Verify the MD5 of the received file.
++    
+     std::string received_md5 = get_file_md5(file_name);
+ 
+-    // Print the received MD5 from server.
++    
+     std::string server_md5 = std::string(md5.begin(), md5.end());
+     std::cout << "MD5 from server: " << server_md5 << std::endl;
+ 
+-    // Print the calculated MD5.
++    
+     std::cout << "Calculated MD5 of received file: " << received_md5 << std::endl;
+ 
+     if (received_md5 == server_md5) {
+@@ -95,7 +95,7 @@ int main() {
+         tcp::socket socket(io_service);
+         boost::asio::connect(socket, endpoint_iterator);
+ 
+-        receive_file(socket, "new_received_file.bin");  // Replace with your file path.
++        receive_file(socket, "new_received_file.bin");  
+     } catch (std::exception& e) {
+         std::cerr << "Exception: " << e.what() << "\n";
+     }
+diff --git a/sync_file_send_recv/server_send_file_test.cpp b/sync_file_send_recv/server_send_file_test.cpp
+index ae6f6a9..3ddc0be 100644
+--- a/sync_file_send_recv/server_send_file_test.cpp
++++ b/sync_file_send_recv/server_send_file_test.cpp
+@@ -1,7 +1,7 @@
+ #include <iostream>
+ #include <fstream>
+ #include <vector>
+-#include <iomanip>  // add this
++#include <iomanip>  
+ #include <boost/asio.hpp>
+ #include <openssl/md5.h>
+ 
+@@ -30,33 +30,33 @@ std::string get_file_md5(const std::string& file_name) {
+ void send_file(tcp::socket& socket, const std::string& file_name) {
+     std::ifstream file(file_name, std::ios::binary);
+ 
+-    // Check if the file was opened successfully.
++    
+     if (!file.is_open() || file.fail()) {
+         std::cerr << "Failed to open the file.\n";
+         return;
+     }
+ 
+-    // Get the file size.
++    
+     file.seekg(0, std::ios::end);
+     std::streamsize size = file.tellg();
+     file.seekg(0, std::ios::beg);
+ 
+-    // Read file into memory.
++    
+     std::vector<char> file_data(size);
+     if (!file.read(file_data.data(), size)) {
+         std::cerr << "Failed to read the file.\n";
+         return;
+     }
+ 
+-    // Calculate the MD5 of the file.
++    
+     std::string md5 = get_file_md5(file_name);
+     std::cout << "MD5 of the file to be sent: " << md5 << std::endl;
+     std::cout << "Size of the file to be sent: " << size << " bytes\n";
+ 
+-    // Send the MD5 to the client.
++    
+     boost::asio::write(socket, boost::asio::buffer(md5));
+ 
+-    // Then send the file data.
++    
+     std::size_t written = boost::asio::write(socket, boost::asio::buffer(file_data));
+ 
+     std::cout << "Written bytes: " << written << "\n";
+@@ -69,7 +69,7 @@ int main() {
+         for (;;) {
+             tcp::socket socket(io_service);
+             acceptor.accept(socket);
+-            send_file(socket, "file_to_send.bin");  // Replace with your file path.
++            send_file(socket, "file_to_send.bin");  
+         }
+     } catch (std::exception& e) {
+         std::cerr << "Exception: " << e.what() << "\n";
+diff --git a/template_test/my_vector.h b/template_test/my_vector.h
+index c86f105..b79fb93 100644
+--- a/template_test/my_vector.h
++++ b/template_test/my_vector.h
+@@ -6,17 +6,17 @@
+ template <typename T>
+ class my_vector {
+ public:
+-    my_vector();  // constructor
+-    ~my_vector();  // destructor
++    my_vector();  
++    ~my_vector();  
+ 
+-    void push_back(const T& value);  // add an element
+-    T get(size_t index) const;  // get an element
+-    size_t size() const;  // get the size
++    void push_back(const T& value);  
++    T get(size_t index) const;  
++    size_t size() const;  
+ 
+ private:
+-    T* array;  // dynamic array
+-    size_t array_size;  // size of the array
+-    size_t array_capacity;  // capacity of the array
++    T* array;  
++    size_t array_size;  
++    size_t array_capacity;  
+ };
+ 
+ template <typename T>
+@@ -34,7 +34,7 @@ my_vector<T>::~my_vector() {
+ template <typename T>
+ void my_vector<T>::push_back(const T& value) {
+     if (array_size == array_capacity) {
+-        // Reallocate the array if it's too small
++        
+         T* new_array = new T[array_capacity * 2];
+         for (size_t i = 0; i < array_size; i++) {
+             new_array[i] = array[i];
+@@ -49,7 +49,7 @@ void my_vector<T>::push_back(const T& value) {
+ template <typename T>
+ T my_vector<T>::get(size_t index) const {
+     if (index >= array_size) {
+-        // Out of bounds! Return a default value.
++        
+         return T();
+     }
+     return array[index];
+@@ -59,5 +59,5 @@ template <typename T>
+ size_t my_vector<T>::size() const {
+     return array_size;
+ }
+-#endif // MY_VECTOR_H
++#endif 
+ 
+diff --git a/template_test/test.cpp b/template_test/test.cpp
+index 9c2f60a..6814737 100644
+--- a/template_test/test.cpp
++++ b/template_test/test.cpp
+@@ -1,13 +1,13 @@
+-#include "my_vector.h"  // include the header file with the template class
++#include "my_vector.h"  
+ #include <iostream>
+ 
+ int main() {
+-    my_vector<int> vec;  // create a my_vector of ints
+-    vec.push_back(1);  // add some values
++    my_vector<int> vec;  
++    vec.push_back(1);  
+     vec.push_back(2);
+     vec.push_back(3);
+ 
+-    // print the size and contents of the vector
++    
+     std::cout << "Size of vector: " << vec.size() << std::endl;
+     for (size_t i = 0; i < vec.size(); i++) {
+         std::cout << "Element " << i << ": " << vec.get(i) << std::endl;
+diff --git a/thread_test.cpp b/thread_test.cpp
+deleted file mode 100644
+index fe4461c..0000000
+--- a/thread_test.cpp
++++ /dev/null
+@@ -1,33 +0,0 @@
+-#include <iostream>
+-#include <thread>
+-#include <mutex>
+-#include <condition_variable>
+-
+-std::mutex mtx;
+-std::condition_variable cv;
+-bool ready = false;
+-
+-void print_id(int id) {
+-    std::unique_lock<std::mutex> lck(mtx);
+-    while (!ready) cv.wait(lck);
+-    std::cout << "thread " << id << '\n';
+-}
+-
+-void go() {
+-    std::unique_lock<std::mutex> lck(mtx);
+-    ready = true;
+-    cv.notify_all();
+-}
+-
+-int main() {
+-    std::thread threads[10];
+-    for (int i = 0; i < 10; ++i)
+-        threads[i] = std::thread(print_id, i);
+-
+-    std::cout << "10 threads ready to race...\n";
+-    go();
+-
+-    for (auto &th : threads) th.join();
+-
+-    return 0;
+-}
+diff --git a/thread_test/thread_kill.cpp b/thread_test/thread_kill.cpp
+index 2ee231a..3bee8b8 100644
+--- a/thread_test/thread_kill.cpp
++++ b/thread_test/thread_kill.cpp
+@@ -13,13 +13,13 @@ void threadFunction() {
+ int main() {
+     std::thread myThread(threadFunction);
+ 
+-    std::this_thread::sleep_for(std::chrono::seconds(5)); // 让线程运行5秒
++    std::this_thread::sleep_for(std::chrono::seconds(5)); 
+ 
+-    // 获取std::thread的原生句柄，并尝试取消线程
++    
+     pthread_t nativeHandle = myThread.native_handle();
+     pthread_cancel(nativeHandle);
+ 
+-    // 等待线程终止
++    
+     myThread.join();
+ 
+     return 0;
+diff --git a/thread_test/thread_kill_std.cpp b/thread_test/thread_kill_std.cpp
+index 2ee231a..3bee8b8 100644
+--- a/thread_test/thread_kill_std.cpp
++++ b/thread_test/thread_kill_std.cpp
+@@ -13,13 +13,13 @@ void threadFunction() {
+ int main() {
+     std::thread myThread(threadFunction);
+ 
+-    std::this_thread::sleep_for(std::chrono::seconds(5)); // 让线程运行5秒
++    std::this_thread::sleep_for(std::chrono::seconds(5)); 
+ 
+-    // 获取std::thread的原生句柄，并尝试取消线程
++    
+     pthread_t nativeHandle = myThread.native_handle();
+     pthread_cancel(nativeHandle);
+ 
+-    // 等待线程终止
++    
+     myThread.join();
+ 
+     return 0;
+diff --git a/timer_test.cpp b/timer_test.cpp
+index 8c7e62f..b43a196 100644
+--- a/timer_test.cpp
++++ b/timer_test.cpp
+@@ -3,14 +3,14 @@
+ 
+ void foo()
+ {
+-    // Simulate some work
++    
+     std::this_thread::sleep_for(std::chrono::seconds(1));
+ }
+ 
+ int main()
+ {
+     std::thread t(foo);
+-    t.detach(); // Detach the thread
++    t.detach(); 
+ 
+     return 0;
+ }
+diff --git a/tmp b/tmp
+index 8d34c9d..6930c7f 100644
+--- a/tmp
++++ b/tmp
+@@ -1,56 +0,0 @@
+-void receive_file(tcp::socket& socket, const std::string& file_name) {
+-    // Truncate the file if it already exists, create it if it does not.
+-    std::ofstream file(file_name, std::ios::binary | std::ios::trunc);
+-
+-    // Check if the file was opened correctly.
+-    if (!file.is_open() || file.fail()) {
+-        std::cerr << "Failed to open the file.\n";
+-        return;
+-    }
+-
+-    // First receive the MD5 from the server.
+-    std::vector<char> md5(32);
+-    boost::asio::read(socket, boost::asio::buffer(md5));
+-
+-    // Then receive the file data.
+-    std::vector<char> file_data(1024);
+-    size_t length;
+-    size_t total_length = 0;
+-    try {
+-        while ((length = socket.read_some(boost::asio::buffer(file_data))) > 0) {
+-            file.write(file_data.data(), length);
+-            total_length += length;
+-
+-            // Check if the write was successful.
+-            if (file.fail()) {
+-                std::cerr << "Failed to write to the file.\n";
+-                return;
+-            }
+-        }
+-    } catch (const boost::system::system_error& ex) {
+-        // If we get an EOF error, it's expected, so don't report it.
+-        if (ex.code() != boost::asio::error::eof) {
+-            std::cerr << "Read error: " << ex.what() << "\n";
+-        }
+-    }
+-
+-    file.close();
+-
+-    std::cout << "Total bytes received: " << total_length << "\n";
+-
+-    // Verify the MD5 of the received file.
+-    std::string received_md5 = get_file_md5(file_name);
+-
+-    // Print the received MD5 from server.
+-    std::string server_md5 = std::string(md5.begin(), md5.end());
+-    std::cout << "MD5 from server: " << server_md5 << std::endl;
+-
+-    // Print the calculated MD5.
+-    std::cout << "Calculated MD5 of received file: " << received_md5 << std::endl;
+-
+-    if (received_md5 == server_md5) {
+-        std::cout << "File received correctly.\n";
+-    } else {
+-        std::cerr << "File received with errors.\n";
+-    }
+-}
+diff --git a/udp_muticast/SharedData.h b/udp_muticast/SharedData.h
+index ff2552e..12ba6b2 100644
+--- a/udp_muticast/SharedData.h
++++ b/udp_muticast/SharedData.h
+@@ -6,20 +6,20 @@
+ class SharedData {
+ public:
+     int version;
+-    std::map<std::string, std::string> metadata; // Metadata for the data
+-    std::vector<uint8_t> binaryData; // Binary data
++    std::map<std::string, std::string> metadata; 
++    std::vector<uint8_t> binaryData; 
+ 
+-    // Default constructor
++    
+     SharedData() : version(0) {}
+ 
+-    // Function to update the data
++    
+     void updateData(const std::map<std::string, std::string>& newMetadata, const std::vector<uint8_t>& newBinaryData) {
+         version++;
+         metadata = newMetadata;
+         binaryData = newBinaryData;
+     }
+ 
+-    // Function to print the data
++    
+     void printData() {
+         std::cout << "Version: " << version << std::endl;
+         std::cout << "Metadata: " << std::endl;
+diff --git a/udp_muticast/udp_multicast_rcv.cpp b/udp_muticast/udp_multicast_rcv.cpp
+index 7009522..5cee196 100644
+--- a/udp_muticast/udp_multicast_rcv.cpp
++++ b/udp_muticast/udp_multicast_rcv.cpp
+@@ -22,7 +22,7 @@ int main() {
+     struct sockaddr_in addr_recv = {};
+     addr_recv.sin_family = AF_INET;
+     addr_recv.sin_port = htons(MULTICAST_PORT);
+-    addr_recv.sin_addr.s_addr = htonl(INADDR_ANY); // any address
++    addr_recv.sin_addr.s_addr = htonl(INADDR_ANY); 
+ 
+     if(bind(sock, (struct sockaddr*)&addr_recv, sizeof(addr_recv)) < 0) {
+         perror("bind");
+diff --git a/udp_muticast/udp_multicast_send.cpp b/udp_muticast/udp_multicast_send.cpp
+index 0a5c995..87ac602 100644
+--- a/udp_muticast/udp_multicast_send.cpp
++++ b/udp_muticast/udp_multicast_send.cpp
+@@ -22,7 +22,7 @@ int main() {
+     struct sockaddr_in addr_send = {};
+     addr_send.sin_family = AF_INET;
+     addr_send.sin_port = htons(MULTICAST_PORT);
+-    addr_send.sin_addr.s_addr = inet_addr(MULTICAST_GROUP); // multicast group
++    addr_send.sin_addr.s_addr = inet_addr(MULTICAST_GROUP); 
+ 
+     char buffer[MAX_BUFFER_SIZE] = "Hello, this is a multicast message!";
+     if(sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr*)&addr_send, sizeof(addr_send)) < 0) {
+diff --git a/udt_develop/build/CMakeFiles/3.26.0/CompilerIdCXX/CMakeCXXCompilerId.cpp b/udt_develop/build/CMakeFiles/3.26.0/CompilerIdCXX/CMakeCXXCompilerId.cpp
+index 746b167..00eb73a 100644
+--- a/udt_develop/build/CMakeFiles/3.26.0/CompilerIdCXX/CMakeCXXCompilerId.cpp
++++ b/udt_develop/build/CMakeFiles/3.26.0/CompilerIdCXX/CMakeCXXCompilerId.cpp
+@@ -1,23 +1,19 @@
+-/* This source file must have a .cpp extension so that all C++ compilers
+-   recognize the extension without flags.  Borland does not know .cxx for
+-   example.  */
++
+ #ifndef __cplusplus
+ # error "A C compiler has been selected for C++."
+ #endif
+ 
+ #if !defined(__has_include)
+-/* If the compiler does not have __has_include, pretend the answer is
+-   always no.  */
++
+ #  define __has_include(x) 0
+ #endif
+ 
+ 
+-/* Version number components: V=Version, R=Revision, P=Patch
+-   Version date components:   YYYY=Year, MM=Month,   DD=Day  */
++
+ 
+ #if defined(__COMO__)
+ # define COMPILER_ID "Comeau"
+-  /* __COMO_VERSION__ = VRR */
++  
+ # define COMPILER_VERSION_MAJOR DEC(__COMO_VERSION__ / 100)
+ # define COMPILER_VERSION_MINOR DEC(__COMO_VERSION__ % 100)
+ 
+@@ -29,8 +25,7 @@
+ # if defined(__GNUC__)
+ #  define SIMULATE_ID "GNU"
+ # endif
+-  /* __INTEL_COMPILER = VRP prior to 2021, and then VVVV for 2021 and later,
+-     except that a few beta releases use the old format with V=2021.  */
++  
+ # if __INTEL_COMPILER < 2021 || __INTEL_COMPILER == 202110 || __INTEL_COMPILER == 202111
+ #  define COMPILER_VERSION_MAJOR DEC(__INTEL_COMPILER/100)
+ #  define COMPILER_VERSION_MINOR DEC(__INTEL_COMPILER/10 % 10)
+@@ -42,16 +37,15 @@
+ # else
+ #  define COMPILER_VERSION_MAJOR DEC(__INTEL_COMPILER)
+ #  define COMPILER_VERSION_MINOR DEC(__INTEL_COMPILER_UPDATE)
+-   /* The third version component from --version is an update index,
+-      but no macro is provided for it.  */
++   
+ #  define COMPILER_VERSION_PATCH DEC(0)
+ # endif
+ # if defined(__INTEL_COMPILER_BUILD_DATE)
+-   /* __INTEL_COMPILER_BUILD_DATE = YYYYMMDD */
++   
+ #  define COMPILER_VERSION_TWEAK DEC(__INTEL_COMPILER_BUILD_DATE)
+ # endif
+ # if defined(_MSC_VER)
+-   /* _MSC_VER = VVRR */
++   
+ #  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+ #  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+ # endif
+@@ -75,10 +69,7 @@
+ #if defined(__GNUC__)
+ # define SIMULATE_ID "GNU"
+ #endif
+-/* __INTEL_LLVM_COMPILER = VVVVRP prior to 2021.2.0, VVVVRRPP for 2021.2.0 and
+- * later.  Look for 6 digit vs. 8 digit version number to decide encoding.
+- * VVVV is no smaller than the current year when a version is released.
+- */
++
+ #if __INTEL_LLVM_COMPILER < 1000000L
+ # define COMPILER_VERSION_MAJOR DEC(__INTEL_LLVM_COMPILER/100)
+ # define COMPILER_VERSION_MINOR DEC(__INTEL_LLVM_COMPILER/10 % 10)
+@@ -89,7 +80,7 @@
+ # define COMPILER_VERSION_PATCH DEC(__INTEL_LLVM_COMPILER     % 100)
+ #endif
+ #if defined(_MSC_VER)
+-  /* _MSC_VER = VVRR */
++  
+ # define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+ # define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+ #endif
+@@ -121,13 +112,13 @@
+ 
+ #elif defined(__BORLANDC__)
+ # define COMPILER_ID "Borland"
+-  /* __BORLANDC__ = 0xVRR */
++  
+ # define COMPILER_VERSION_MAJOR HEX(__BORLANDC__>>8)
+ # define COMPILER_VERSION_MINOR HEX(__BORLANDC__ & 0xFF)
+ 
+ #elif defined(__WATCOMC__) && __WATCOMC__ < 1200
+ # define COMPILER_ID "Watcom"
+-   /* __WATCOMC__ = VVRR */
++   
+ # define COMPILER_VERSION_MAJOR DEC(__WATCOMC__ / 100)
+ # define COMPILER_VERSION_MINOR DEC((__WATCOMC__ / 10) % 10)
+ # if (__WATCOMC__ % 10) > 0
+@@ -136,7 +127,7 @@
+ 
+ #elif defined(__WATCOMC__)
+ # define COMPILER_ID "OpenWatcom"
+-   /* __WATCOMC__ = VVRP + 1100 */
++   
+ # define COMPILER_VERSION_MAJOR DEC((__WATCOMC__ - 1100) / 100)
+ # define COMPILER_VERSION_MINOR DEC((__WATCOMC__ / 10) % 10)
+ # if (__WATCOMC__ % 10) > 0
+@@ -146,12 +137,12 @@
+ #elif defined(__SUNPRO_CC)
+ # define COMPILER_ID "SunPro"
+ # if __SUNPRO_CC >= 0x5100
+-   /* __SUNPRO_CC = 0xVRRP */
++   
+ #  define COMPILER_VERSION_MAJOR HEX(__SUNPRO_CC>>12)
+ #  define COMPILER_VERSION_MINOR HEX(__SUNPRO_CC>>4 & 0xFF)
+ #  define COMPILER_VERSION_PATCH HEX(__SUNPRO_CC    & 0xF)
+ # else
+-   /* __SUNPRO_CC = 0xVRP */
++   
+ #  define COMPILER_VERSION_MAJOR HEX(__SUNPRO_CC>>8)
+ #  define COMPILER_VERSION_MINOR HEX(__SUNPRO_CC>>4 & 0xF)
+ #  define COMPILER_VERSION_PATCH HEX(__SUNPRO_CC    & 0xF)
+@@ -159,21 +150,21 @@
+ 
+ #elif defined(__HP_aCC)
+ # define COMPILER_ID "HP"
+-  /* __HP_aCC = VVRRPP */
++  
+ # define COMPILER_VERSION_MAJOR DEC(__HP_aCC/10000)
+ # define COMPILER_VERSION_MINOR DEC(__HP_aCC/100 % 100)
+ # define COMPILER_VERSION_PATCH DEC(__HP_aCC     % 100)
+ 
+ #elif defined(__DECCXX)
+ # define COMPILER_ID "Compaq"
+-  /* __DECCXX_VER = VVRRTPPPP */
++  
+ # define COMPILER_VERSION_MAJOR DEC(__DECCXX_VER/10000000)
+ # define COMPILER_VERSION_MINOR DEC(__DECCXX_VER/100000  % 100)
+ # define COMPILER_VERSION_PATCH DEC(__DECCXX_VER         % 10000)
+ 
+ #elif defined(__IBMCPP__) && defined(__COMPILER_VER__)
+ # define COMPILER_ID "zOS"
+-  /* __IBMCPP__ = VRP */
++  
+ # define COMPILER_VERSION_MAJOR DEC(__IBMCPP__/100)
+ # define COMPILER_VERSION_MINOR DEC(__IBMCPP__/10 % 10)
+ # define COMPILER_VERSION_PATCH DEC(__IBMCPP__    % 10)
+@@ -196,14 +187,14 @@
+ 
+ #elif defined(__IBMCPP__) && !defined(__COMPILER_VER__) && __IBMCPP__ >= 800
+ # define COMPILER_ID "XL"
+-  /* __IBMCPP__ = VRP */
++  
+ # define COMPILER_VERSION_MAJOR DEC(__IBMCPP__/100)
+ # define COMPILER_VERSION_MINOR DEC(__IBMCPP__/10 % 10)
+ # define COMPILER_VERSION_PATCH DEC(__IBMCPP__    % 10)
+ 
+ #elif defined(__IBMCPP__) && !defined(__COMPILER_VER__) && __IBMCPP__ < 800
+ # define COMPILER_ID "VisualAge"
+-  /* __IBMCPP__ = VRP */
++  
+ # define COMPILER_VERSION_MAJOR DEC(__IBMCPP__/100)
+ # define COMPILER_VERSION_MINOR DEC(__IBMCPP__/10 % 10)
+ # define COMPILER_VERSION_PATCH DEC(__IBMCPP__    % 10)
+@@ -231,7 +222,7 @@
+ 
+ #elif defined(__TI_COMPILER_VERSION__)
+ # define COMPILER_ID "TI"
+-  /* __TI_COMPILER_VERSION__ = VVVRRRPPP */
++  
+ # define COMPILER_VERSION_MAJOR DEC(__TI_COMPILER_VERSION__/1000000)
+ # define COMPILER_VERSION_MINOR DEC(__TI_COMPILER_VERSION__/1000   % 1000)
+ # define COMPILER_VERSION_PATCH DEC(__TI_COMPILER_VERSION__        % 1000)
+@@ -262,7 +253,7 @@
+ 
+ #elif defined(__ghs__)
+ # define COMPILER_ID "GHS"
+-/* __GHS_VERSION_NUMBER = VVVVRP */
++
+ # ifdef __GHS_VERSION_NUMBER
+ # define COMPILER_VERSION_MAJOR DEC(__GHS_VERSION_NUMBER / 100)
+ # define COMPILER_VERSION_MINOR DEC(__GHS_VERSION_NUMBER / 10 % 10)
+@@ -281,12 +272,12 @@
+ #elif defined(__ARMCC_VERSION) && !defined(__clang__)
+ # define COMPILER_ID "ARMCC"
+ #if __ARMCC_VERSION >= 1000000
+-  /* __ARMCC_VERSION = VRRPPPP */
++  
+   # define COMPILER_VERSION_MAJOR DEC(__ARMCC_VERSION/1000000)
+   # define COMPILER_VERSION_MINOR DEC(__ARMCC_VERSION/10000 % 100)
+   # define COMPILER_VERSION_PATCH DEC(__ARMCC_VERSION     % 10000)
+ #else
+-  /* __ARMCC_VERSION = VRPPPP */
++  
+   # define COMPILER_VERSION_MAJOR DEC(__ARMCC_VERSION/100000)
+   # define COMPILER_VERSION_MINOR DEC(__ARMCC_VERSION/10000 % 10)
+   # define COMPILER_VERSION_PATCH DEC(__ARMCC_VERSION    % 10000)
+@@ -302,7 +293,7 @@
+ # define COMPILER_VERSION_MINOR DEC(__clang_minor__)
+ # define COMPILER_VERSION_PATCH DEC(__clang_patchlevel__)
+ # if defined(_MSC_VER)
+-   /* _MSC_VER = VVRR */
++   
+ #  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+ #  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+ # endif
+@@ -324,7 +315,7 @@
+ # define COMPILER_VERSION_MINOR DEC(__clang_minor__)
+ # define COMPILER_VERSION_PATCH DEC(__clang_patchlevel__)
+ # if defined(_MSC_VER)
+-   /* _MSC_VER = VVRR */
++   
+ #  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+ #  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+ # endif
+@@ -361,15 +352,15 @@
+ 
+ #elif defined(_MSC_VER)
+ # define COMPILER_ID "MSVC"
+-  /* _MSC_VER = VVRR */
++  
+ # define COMPILER_VERSION_MAJOR DEC(_MSC_VER / 100)
+ # define COMPILER_VERSION_MINOR DEC(_MSC_VER % 100)
+ # if defined(_MSC_FULL_VER)
+ #  if _MSC_VER >= 1400
+-    /* _MSC_FULL_VER = VVRRPPPPP */
++    
+ #   define COMPILER_VERSION_PATCH DEC(_MSC_FULL_VER % 100000)
+ #  else
+-    /* _MSC_FULL_VER = VVRRPPPP */
++    
+ #   define COMPILER_VERSION_PATCH DEC(_MSC_FULL_VER % 10000)
+ #  endif
+ # endif
+@@ -380,7 +371,7 @@
+ #elif defined(_ADI_COMPILER)
+ # define COMPILER_ID "ADSP"
+ #if defined(__VERSIONNUM__)
+-  /* __VERSIONNUM__ = 0xVVRRPPTT */
++  
+ #  define COMPILER_VERSION_MAJOR DEC(__VERSIONNUM__ >> 24 & 0xFF)
+ #  define COMPILER_VERSION_MINOR DEC(__VERSIONNUM__ >> 16 & 0xFF)
+ #  define COMPILER_VERSION_PATCH DEC(__VERSIONNUM__ >> 8 & 0xFF)
+@@ -402,20 +393,15 @@
+ # endif
+ 
+ 
+-/* These compilers are either not known or too old to define an
+-  identification macro.  Try to identify the platform and guess that
+-  it is the native compiler.  */
++
+ #elif defined(__hpux) || defined(__hpua)
+ # define COMPILER_ID "HP"
+ 
+-#else /* unknown compiler */
++#else 
+ # define COMPILER_ID ""
+ #endif
+ 
+-/* Construct the string literal in pieces to prevent the source from
+-   getting matched.  Store it in a pointer rather than an array
+-   because some compilers will just produce instructions to fill the
+-   array rather than assigning a pointer to a static array.  */
++
+ char const* info_compiler = "INFO" ":" "compiler[" COMPILER_ID "]";
+ #ifdef SIMULATE_ID
+ char const* info_simulate = "INFO" ":" "simulate[" SIMULATE_ID "]";
+@@ -432,7 +418,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+ #define STRINGIFY_HELPER(X) #X
+ #define STRINGIFY(X) STRINGIFY_HELPER(X)
+ 
+-/* Identify known platforms by name.  */
++
+ #if defined(__linux) || defined(__linux__) || defined(linux)
+ # define PLATFORM_ID "Linux"
+ 
+@@ -524,7 +510,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+ # elif defined(__VXWORKS__)
+ #  define PLATFORM_ID "VxWorks"
+ 
+-# else /* unknown platform */
++# else 
+ #  define PLATFORM_ID
+ # endif
+ 
+@@ -532,23 +518,19 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+ # if defined(INT_178B)
+ #  define PLATFORM_ID "Integrity178"
+ 
+-# else /* regular Integrity */
++# else 
+ #  define PLATFORM_ID "Integrity"
+ # endif
+ 
+ # elif defined(_ADI_COMPILER)
+ #  define PLATFORM_ID "ADSP"
+ 
+-#else /* unknown platform */
++#else 
+ # define PLATFORM_ID
+ 
+ #endif
+ 
+-/* For windows compilers MSVC and Intel we can determine
+-   the architecture of the compiler being used.  This is because
+-   the compilers do not have flags that can change the architecture,
+-   but rather depend on which compiler is being used
+-*/
++
+ #if defined(_WIN32) && defined(_MSC_VER)
+ # if defined(_M_IA64)
+ #  define ARCHITECTURE_ID "IA64"
+@@ -580,7 +562,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+ # elif defined(_M_SH)
+ #  define ARCHITECTURE_ID "SHx"
+ 
+-# else /* unknown architecture */
++# else 
+ #  define ARCHITECTURE_ID ""
+ # endif
+ 
+@@ -591,7 +573,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+ # elif defined(_M_IX86)
+ #  define ARCHITECTURE_ID "X86"
+ 
+-# else /* unknown architecture */
++# else 
+ #  define ARCHITECTURE_ID ""
+ # endif
+ 
+@@ -626,7 +608,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+ # elif defined(__ICCSTM8__)
+ #  define ARCHITECTURE_ID "STM8"
+ 
+-# else /* unknown architecture */
++# else 
+ #  define ARCHITECTURE_ID ""
+ # endif
+ 
+@@ -646,7 +628,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+ # elif defined(__i386__)
+ #  define ARCHITECTURE_ID "X86"
+ 
+-# else /* unknown architecture */
++# else 
+ #  define ARCHITECTURE_ID ""
+ # endif
+ 
+@@ -663,7 +645,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+ # elif defined(__TMS320C6X__) || defined(_TMS320C6X)
+ #  define ARCHITECTURE_ID "TMS320C6x"
+ 
+-# else /* unknown architecture */
++# else 
+ #  define ARCHITECTURE_ID ""
+ # endif
+ 
+@@ -701,7 +683,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+ #  define ARCHITECTURE_ID
+ #endif
+ 
+-/* Convert integer to decimal digit literals.  */
++
+ #define DEC(n)                   \
+   ('0' + (((n) / 10000000)%10)), \
+   ('0' + (((n) / 1000000)%10)),  \
+@@ -712,7 +694,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+   ('0' + (((n) / 10)%10)),       \
+   ('0' +  ((n) % 10))
+ 
+-/* Convert integer to hex digit literals.  */
++
+ #define HEX(n)             \
+   ('0' + ((n)>>28 & 0xF)), \
+   ('0' + ((n)>>24 & 0xF)), \
+@@ -723,11 +705,11 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+   ('0' + ((n)>>4  & 0xF)), \
+   ('0' + ((n)     & 0xF))
+ 
+-/* Construct a string literal encoding the version number. */
++
+ #ifdef COMPILER_VERSION
+ char const* info_version = "INFO" ":" "compiler_version[" COMPILER_VERSION "]";
+ 
+-/* Construct a string literal encoding the version number components. */
++
+ #elif defined(COMPILER_VERSION_MAJOR)
+ char const info_version[] = {
+   'I', 'N', 'F', 'O', ':',
+@@ -745,7 +727,7 @@ char const info_version[] = {
+   ']','\0'};
+ #endif
+ 
+-/* Construct a string literal encoding the internal version number. */
++
+ #ifdef COMPILER_VERSION_INTERNAL
+ char const info_version_internal[] = {
+   'I', 'N', 'F', 'O', ':',
+@@ -756,7 +738,7 @@ char const info_version_internal[] = {
+ char const* info_version_internal = "INFO" ":" "compiler_version_internal[" COMPILER_VERSION_INTERNAL_STR "]";
+ #endif
+ 
+-/* Construct a string literal encoding the version number components. */
++
+ #ifdef SIMULATE_VERSION_MAJOR
+ char const info_simulate_version[] = {
+   'I', 'N', 'F', 'O', ':',
+@@ -774,10 +756,7 @@ char const info_simulate_version[] = {
+   ']','\0'};
+ #endif
+ 
+-/* Construct the string literal in pieces to prevent the source from
+-   getting matched.  Store it in a pointer rather than an array
+-   because some compilers will just produce instructions to fill the
+-   array rather than assigning a pointer to a static array.  */
++
+ char const* info_platform = "INFO" ":" "platform[" PLATFORM_ID "]";
+ char const* info_arch = "INFO" ":" "arch[" ARCHITECTURE_ID "]";
+ 
+@@ -825,7 +804,7 @@ const char* info_language_extensions_default = "INFO" ":" "extensions_default["
+ #endif
+ "]";
+ 
+-/*--------------------------------------------------------------------------*/
++
+ 
+ int main(int argc, char* argv[])
+ {
+diff --git a/udt_develop/include/udt.h b/udt_develop/include/udt.h
+index 9c9ae89..504d149 100644
+--- a/udt_develop/include/udt.h
++++ b/udt_develop/include/udt.h
+@@ -1,42 +1,6 @@
+-/*****************************************************************************
+-Copyright (c) 2001 - 2011, The Board of Trustees of the University of Illinois.
+-All rights reserved.
+-
+-Redistribution and use in source and binary forms, with or without
+-modification, are permitted provided that the following conditions are
+-met:
+-
+-* Redistributions of source code must retain the above
+-  copyright notice, this list of conditions and the
+-  following disclaimer.
+-
+-* Redistributions in binary form must reproduce the
+-  above copyright notice, this list of conditions
+-  and the following disclaimer in the documentation
+-  and/or other materials provided with the distribution.
+-
+-* Neither the name of the University of Illinois
+-  nor the names of its contributors may be used to
+-  endorse or promote products derived from this
+-  software without specific prior written permission.
+-
+-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+-PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-*****************************************************************************/
+-
+-/*****************************************************************************
+-written by
+-   Yunhong Gu, last updated 01/18/2011
+-*****************************************************************************/
++
++
++
+ 
+ #ifndef __UDT_H__
+ #define __UDT_H__
+@@ -57,7 +21,7 @@ written by
+ #include <vector>
+ 
+ 
+-////////////////////////////////////////////////////////////////////////////////
++
+ 
+ #ifdef WINDOWS
+   typedef SOCKET SYSSOCKET;
+@@ -72,7 +36,7 @@ written by
+ typedef SYSSOCKET UDPSOCKET;
+ typedef int UDTSOCKET;
+ 
+-////////////////////////////////////////////////////////////////////////////////
++
+ 
+ typedef std::set<UDTSOCKET> ud_set;
+ #define UD_CLR(u, uset) ((uset)->erase(u))
+@@ -82,8 +46,8 @@ typedef std::set<UDTSOCKET> ud_set;
+ 
+ enum EPOLLOpt
+ {
+-   // this values are defined same as linux epoll.h
+-   // so that if system values are used by mistake, they should have the same effect
++   
++   
+    UDT_EPOLL_IN = 0x1,
+    UDT_EPOLL_OUT = 0x4,
+    UDT_EPOLL_ERR = 0x8
+@@ -91,76 +55,76 @@ enum EPOLLOpt
+ 
+ enum UDTSTATUS {INIT = 1, OPENED, LISTENING, CONNECTING, CONNECTED, BROKEN, CLOSING, CLOSED, NONEXIST};
+ 
+-////////////////////////////////////////////////////////////////////////////////
++
+ 
+ enum UDTOpt
+ {
+-   UDT_MSS,             // the Maximum Transfer Unit
+-   UDT_SNDSYN,          // if sending is blocking
+-   UDT_RCVSYN,          // if receiving is blocking
+-   UDT_CC,              // custom congestion control algorithm
+-   UDT_FC,		// Flight flag size (window size)
+-   UDT_SNDBUF,          // maximum buffer in sending queue
+-   UDT_RCVBUF,          // UDT receiving buffer size
+-   UDT_LINGER,          // waiting for unsent data when closing
+-   UDP_SNDBUF,          // UDP sending buffer size
+-   UDP_RCVBUF,          // UDP receiving buffer size
+-   UDT_MAXMSG,          // maximum datagram message size
+-   UDT_MSGTTL,          // time-to-live of a datagram message
+-   UDT_RENDEZVOUS,      // rendezvous connection mode
+-   UDT_SNDTIMEO,        // send() timeout
+-   UDT_RCVTIMEO,        // recv() timeout
+-   UDT_REUSEADDR,	// reuse an existing port or create a new one
+-   UDT_MAXBW,		// maximum bandwidth (bytes per second) that the connection can use
+-   UDT_STATE,		// current socket state, see UDTSTATUS, read only
+-   UDT_EVENT,		// current avalable events associated with the socket
+-   UDT_SNDDATA,		// size of data in the sending buffer
+-   UDT_RCVDATA		// size of data available for recv
++   UDT_MSS,             
++   UDT_SNDSYN,          
++   UDT_RCVSYN,          
++   UDT_CC,              
++   UDT_FC,		
++   UDT_SNDBUF,          
++   UDT_RCVBUF,          
++   UDT_LINGER,          
++   UDP_SNDBUF,          
++   UDP_RCVBUF,          
++   UDT_MAXMSG,          
++   UDT_MSGTTL,          
++   UDT_RENDEZVOUS,      
++   UDT_SNDTIMEO,        
++   UDT_RCVTIMEO,        
++   UDT_REUSEADDR,	
++   UDT_MAXBW,		
++   UDT_STATE,		
++   UDT_EVENT,		
++   UDT_SNDDATA,		
++   UDT_RCVDATA		
+ };
+ 
+-////////////////////////////////////////////////////////////////////////////////
++
+ 
+ struct CPerfMon
+ {
+-   // global measurements
+-   int64_t msTimeStamp;                 // time since the UDT entity is started, in milliseconds
+-   int64_t pktSentTotal;                // total number of sent data packets, including retransmissions
+-   int64_t pktRecvTotal;                // total number of received packets
+-   int pktSndLossTotal;                 // total number of lost packets (sender side)
+-   int pktRcvLossTotal;                 // total number of lost packets (receiver side)
+-   int pktRetransTotal;                 // total number of retransmitted packets
+-   int pktSentACKTotal;                 // total number of sent ACK packets
+-   int pktRecvACKTotal;                 // total number of received ACK packets
+-   int pktSentNAKTotal;                 // total number of sent NAK packets
+-   int pktRecvNAKTotal;                 // total number of received NAK packets
+-   int64_t usSndDurationTotal;		// total time duration when UDT is sending data (idle time exclusive)
+-
+-   // local measurements
+-   int64_t pktSent;                     // number of sent data packets, including retransmissions
+-   int64_t pktRecv;                     // number of received packets
+-   int pktSndLoss;                      // number of lost packets (sender side)
+-   int pktRcvLoss;                      // number of lost packets (receiver side)
+-   int pktRetrans;                      // number of retransmitted packets
+-   int pktSentACK;                      // number of sent ACK packets
+-   int pktRecvACK;                      // number of received ACK packets
+-   int pktSentNAK;                      // number of sent NAK packets
+-   int pktRecvNAK;                      // number of received NAK packets
+-   double mbpsSendRate;                 // sending rate in Mb/s
+-   double mbpsRecvRate;                 // receiving rate in Mb/s
+-   int64_t usSndDuration;		// busy sending time (i.e., idle time exclusive)
+-
+-   // instant measurements
+-   double usPktSndPeriod;               // packet sending period, in microseconds
+-   int pktFlowWindow;                   // flow window size, in number of packets
+-   int pktCongestionWindow;             // congestion window size, in number of packets
+-   int pktFlightSize;                   // number of packets on flight
+-   double msRTT;                        // RTT, in milliseconds
+-   double mbpsBandwidth;                // estimated bandwidth, in Mb/s
+-   int byteAvailSndBuf;                 // available UDT sender buffer size
+-   int byteAvailRcvBuf;                 // available UDT receiver buffer size
++   
++   int64_t msTimeStamp;                 
++   int64_t pktSentTotal;                
++   int64_t pktRecvTotal;                
++   int pktSndLossTotal;                 
++   int pktRcvLossTotal;                 
++   int pktRetransTotal;                 
++   int pktSentACKTotal;                 
++   int pktRecvACKTotal;                 
++   int pktSentNAKTotal;                 
++   int pktRecvNAKTotal;                 
++   int64_t usSndDurationTotal;		
++
++   
++   int64_t pktSent;                     
++   int64_t pktRecv;                     
++   int pktSndLoss;                      
++   int pktRcvLoss;                      
++   int pktRetrans;                      
++   int pktSentACK;                      
++   int pktRecvACK;                      
++   int pktSentNAK;                      
++   int pktRecvNAK;                      
++   double mbpsSendRate;                 
++   double mbpsRecvRate;                 
++   int64_t usSndDuration;		
++
++   
++   double usPktSndPeriod;               
++   int pktFlowWindow;                   
++   int pktCongestionWindow;             
++   int pktFlightSize;                   
++   double msRTT;                        
++   double mbpsBandwidth;                
++   int byteAvailSndBuf;                 
++   int byteAvailRcvBuf;                 
+ };
+ 
+-////////////////////////////////////////////////////////////////////////////////
++
+ 
+ class UDT_API CUDTException
+ {
+@@ -169,52 +133,52 @@ public:
+    CUDTException(const CUDTException& e);
+    virtual ~CUDTException();
+ 
+-      // Functionality:
+-      //    Get the description of the exception.
+-      // Parameters:
+-      //    None.
+-      // Returned value:
+-      //    Text message for the exception description.
++      
++      
++      
++      
++      
++      
+ 
+    virtual const char* getErrorMessage();
+ 
+-      // Functionality:
+-      //    Get the system errno for the exception.
+-      // Parameters:
+-      //    None.
+-      // Returned value:
+-      //    errno.
++      
++      
++      
++      
++      
++      
+ 
+    virtual int getErrorCode() const;
+ 
+-      // Functionality:
+-      //    Clear the error code.
+-      // Parameters:
+-      //    None.
+-      // Returned value:
+-      //    None.
++      
++      
++      
++      
++      
++      
+ 
+    virtual void clear();
+ 
+ private:
+-   int m_iMajor;        // major exception categories
++   int m_iMajor;        
++
++
++
++
+ 
+-// 0: correct condition
+-// 1: network setup exception
+-// 2: network connection broken
+-// 3: memory exception
+-// 4: file exception
+-// 5: method not supported
+-// 6+: undefined error
+ 
+-   int m_iMinor;		// for specific error reasons
+-   int m_iErrno;		// errno returned by the system if there is any
+-   std::string m_strMsg;	// text error message
+ 
+-   std::string m_strAPI;	// the name of UDT function that returns the error
+-   std::string m_strDebug;	// debug information, set to the original place that causes the error
+ 
+-public: // Error Code
++
++   int m_iMinor;		
++   int m_iErrno;		
++   std::string m_strMsg;	
++
++   std::string m_strAPI;	
++   std::string m_strDebug;	
++
++public: 
+    static const int SUCCESS;
+    static const int ECONNSETUP;
+    static const int ENOSERVER;
+@@ -254,12 +218,12 @@ public: // Error Code
+    static const int EUNKNOWN;
+ };
+ 
+-////////////////////////////////////////////////////////////////////////////////
+ 
+-// If you need to export these APIs to be used by a different language,
+-// declare extern "C" for them, and add a "udt_" prefix to each API.
+-// The following APIs: sendfile(), recvfile(), epoll_wait(), geterrormsg(),
+-// include C++ specific feature, please use the corresponding sendfile2(), etc.
++
++
++
++
++
+ 
+ namespace UDT
+ {
+@@ -296,14 +260,14 @@ UDT_API int64_t recvfile(UDTSOCKET u, std::fstream& ofs, int64_t& offset, int64_
+ UDT_API int64_t sendfile2(UDTSOCKET u, const char* path, int64_t* offset, int64_t size, int block = 364000);
+ UDT_API int64_t recvfile2(UDTSOCKET u, const char* path, int64_t* offset, int64_t size, int block = 7280000);
+ 
+-// select and selectEX are DEPRECATED; please use epoll.
++
+ UDT_API int select(int nfds, UDSET* readfds, UDSET* writefds, UDSET* exceptfds, const struct timeval* timeout);
+ UDT_API int selectEx(const std::vector<UDTSOCKET>& fds, std::vector<UDTSOCKET>* readfds,
+                      std::vector<UDTSOCKET>* writefds, std::vector<UDTSOCKET>* exceptfds, int64_t msTimeOut);
+ 
+-// BARCHART
++
+ UDT_API int epoll_update_usock(int eid, UDTSOCKET u, const int* events = NULL);
+-// BARCHART
++
+ UDT_API int epoll_verify_usock(int eid, UDTSOCKET u, int* events);
+ 
+ UDT_API int epoll_create();
+@@ -322,6 +286,6 @@ UDT_API const char* getlasterror_desc();
+ UDT_API int perfmon(UDTSOCKET u, TRACEINFO* perf, bool clear = true);
+ UDT_API UDTSTATUS getsockstate(UDTSOCKET u);
+ 
+-}  // namespace UDT
++}  
+ 
+ #endif
+diff --git a/udt_develop/net_convert/recv_net_convert.cpp b/udt_develop/net_convert/recv_net_convert.cpp
+index b99bfe5..ee9175a 100644
+--- a/udt_develop/net_convert/recv_net_convert.cpp
++++ b/udt_develop/net_convert/recv_net_convert.cpp
+@@ -23,7 +23,7 @@ msg receive_msg(int port) {
+     char buffer[1024];
+     int n = recvfrom(sockfd, &msg_type_net, sizeof(msg_type_net), 0, NULL, NULL);
+ 
+-    // Convert msg_type from network byte order to host byte order
++    
+     unsigned int msg_type = ntohl(msg_type_net);
+ 
+     n = recvfrom(sockfd, buffer, sizeof(buffer)-1, 0, NULL, NULL);
+diff --git a/udt_develop/net_convert/send_net_convert.cpp b/udt_develop/net_convert/send_net_convert.cpp
+index b99bfe5..ee9175a 100644
+--- a/udt_develop/net_convert/send_net_convert.cpp
++++ b/udt_develop/net_convert/send_net_convert.cpp
+@@ -23,7 +23,7 @@ msg receive_msg(int port) {
+     char buffer[1024];
+     int n = recvfrom(sockfd, &msg_type_net, sizeof(msg_type_net), 0, NULL, NULL);
+ 
+-    // Convert msg_type from network byte order to host byte order
++    
+     unsigned int msg_type = ntohl(msg_type_net);
+ 
+     n = recvfrom(sockfd, buffer, sizeof(buffer)-1, 0, NULL, NULL);
+diff --git a/udt_develop/send_file.cpp b/udt_develop/send_file.cpp
+index 15e7bc1..1e4f7d3 100644
+--- a/udt_develop/send_file.cpp
++++ b/udt_develop/send_file.cpp
+@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
+         std::cout << "Sent " << sent << " bytes\n";
+     }
+ 
+-    // 为了确保发送最后一部分（可能不足8192字节）
++    
+     sent = UDT::send(client, buffer, ifs.gcount(), 0);
+     if (sent < 0) {
+         std::cerr << "send: " << UDT::getlasterror().getErrorMessage() << std::endl;
+diff --git a/udt_develop/udp_recv_msg.cpp b/udt_develop/udp_recv_msg.cpp
+index e96ce82..caafa87 100644
+--- a/udt_develop/udp_recv_msg.cpp
++++ b/udt_develop/udp_recv_msg.cpp
+@@ -54,7 +54,7 @@ void receive_msg(int port) {
+ }
+ 
+ int main() {
+-    // Test receiving a message
++    
+     receive_msg(9000);
+     return 0;
+ }
+diff --git a/udt_develop/udp_send_msg.cpp b/udt_develop/udp_send_msg.cpp
+index ffd0aa8..bcd62d2 100644
+--- a/udt_develop/udp_send_msg.cpp
++++ b/udt_develop/udp_send_msg.cpp
+@@ -35,7 +35,7 @@ void send_msg(const char* ip, int port, const std::string& message) {
+ }
+ 
+ int main() {
+-    // Test sending a message
++    
+     send_msg("127.0.0.1", 9000, "Hello, UDT!");
+     return 0;
+ }
+diff --git a/udt_develop/udt_send_msg.cpp b/udt_develop/udt_send_msg.cpp
+deleted file mode 100644
+index f51d009..0000000
+--- a/udt_develop/udt_send_msg.cpp
++++ /dev/null
+@@ -1,36 +0,0 @@
+-#include <iostream>
+-#include <udt.h>
+-#include <cstdlib>
+-#include <cstring>
+-
+-int main(int argc, char* argv[]) {
+-    // 初始化 UDT 库
+-    UDT::startup();
+-
+-    sockaddr_in serv_addr;
+-    serv_addr.sin_family = AF_INET;
+-    serv_addr.sin_port = htons(9000);
+-
+-    // 创建 socket
+-    UDTSOCKET client = UDT::socket(AF_INET, SOCK_DGRAM, 0);
+-
+-    // 连接到服务器
+-    if (UDT::ERROR == UDT::connect(client, (sockaddr*)&serv_addr, sizeof(serv_addr))) {
+-        std::cerr << "connect: " << UDT::getlasterror().getErrorMessage();
+-        return 1;
+-    }
+-
+-    // 发送消息
+-    char* message = "Hello, UDT!";
+-    int msglen = strlen(message) + 1;  // 包括结束字符 '\0'
+-    if (UDT::ERROR == UDT::sendmsg(client, message, msglen)) {
+-        std::cerr << "sendmsg: " << UDT::getlasterror().getErrorMessage();
+-        return 1;
+-    }
+-
+-    // 关闭连接
+-    UDT::close(client);
+-    UDT::cleanup();
+-
+-    return 0;
+-}

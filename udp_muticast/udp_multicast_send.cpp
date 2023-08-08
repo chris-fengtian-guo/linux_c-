@@ -22,7 +22,7 @@ int main() {
     struct sockaddr_in addr_send = {};
     addr_send.sin_family = AF_INET;
     addr_send.sin_port = htons(MULTICAST_PORT);
-    addr_send.sin_addr.s_addr = inet_addr(MULTICAST_GROUP); // multicast group
+    addr_send.sin_addr.s_addr = inet_addr(MULTICAST_GROUP); 
 
     char buffer[MAX_BUFFER_SIZE] = "Hello, this is a multicast message!";
     if(sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr*)&addr_send, sizeof(addr_send)) < 0) {

@@ -11,7 +11,7 @@ void start_sending(tcp::socket &socket, const std::string &file_name) {
 		return;
 	}
 	file.seekg(0, std::ios::end);
-	//size_t file_size = file.tellg();
+	
 	file.seekg(0, std::ios::beg);
 
 	boost::asio::streambuf buf;

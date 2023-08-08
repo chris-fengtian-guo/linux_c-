@@ -38,7 +38,7 @@ public:
     void StopProcess();
 
 private:
-    // 保存子进程相关信息
+    
 };
 
 class ExceptionHandler
