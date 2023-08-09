@@ -1,0 +1,5 @@
+std::string Message::serialize() const {
+    std::stringstream ss;
+    ss << static_cast<int>(type) << ',' << uuid << ',' << device_id << ',' << content;
+    return ss.str();
+}
