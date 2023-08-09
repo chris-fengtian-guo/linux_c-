@@ -21,7 +21,7 @@ void udp_receiver() {
     struct sockaddr_in servaddr, cliaddr;
     char buffer[MAX_BUFFER_SIZE];
 
-    // Create UDP socket
+    
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     memset(&servaddr, 0, sizeof(servaddr));
 
@@ -53,7 +53,7 @@ void message_processor() {
         std::string msg = messageQueue.front();
         messageQueue.pop();
 
-        // Process (print) the message
+        
         std::cout << "queue Received Message: " << msg << std::endl;
     }
 }

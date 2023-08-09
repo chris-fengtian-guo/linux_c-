@@ -25,7 +25,7 @@ struct Message {
     std::string device_id;
     std::string content;
 
-    // Assume a method to deserialize a message from a string, this can be expanded upon
+    
     static Message fromString(const std::string& str);
 };
 
@@ -74,17 +74,17 @@ private:
     std::vector<Registration> registrations_;
 };
 
-std::queue<Message> messageQueue; // change from std::string to Message
+std::queue<Message> messageQueue; 
 std::mutex queueMutex;
 std::condition_variable dataAvailable;
-CallbackManager callbackManager; // global callback manager instance
+CallbackManager callbackManager; 
 
 void udp_receiver() {
     int sockfd;
     struct sockaddr_in servaddr, cliaddr;
     char buffer[MAX_BUFFER_SIZE];
 
-    // Create UDP socket
+    
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     memset(&servaddr, 0, sizeof(servaddr));
 
@@ -118,12 +118,12 @@ void message_processor() {
         Message msg = messageQueue.front();
         messageQueue.pop();
 
-        // Notify the registered callback with the message
+        
         callbackManager.notify(msg);
     }
 }
 void paceStepperHandler(const Message& msg) {
-    // Sample handler, can be replaced with actual handling logic
+    
     std::cout << "PaceStepper received message with content: " << msg.content << std::endl;
 }
 

@@ -71,7 +71,7 @@ void start_udp_server(int port) {
         
         Message msg = Message::deserialize(buffer);
         
-        // Handle the received message here
+        
         
         std::cout << "Received message type: " << msg.type << " UUID: " << msg.uuid << std::endl;
     }

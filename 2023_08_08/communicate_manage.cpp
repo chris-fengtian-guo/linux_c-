@@ -1,4 +1,4 @@
-// CommunicationBase.h
+
 class CommunicationBase {
 public:
     virtual void send(const std::string &message) = 0;
@@ -7,43 +7,43 @@ public:
 };
 
 class UDPCommunication : public CommunicationBase {
-    // UDP 实现
+    
     void send(const std::string &message) override {
-        // 实现发送功能
+        
     }
     
     std::string receive() override {
-        // 实现接收功能
+        
         return "";
     }
 };
 
 class UDTCommunication : public CommunicationBase {
-    // UDT 实现
+    
     void send(const std::string &message) override {
-        // 实现发送功能
+        
     }
     
     std::string receive() override {
-        // 实现接收功能
+        
         return "";
     }
 };
 
 class SerialCommunication : public CommunicationBase {
-    // 串口实现
+    
     void send(const std::string &message) override {
-        // 实现发送功能
+        
     }
     
     std::string receive() override {
-        // 实现接收功能
+        
         return "";
     }
 };
 
-// CommunicationManager.h
-#include <nlohmann/json.hpp> // 使用了nlohmann的json库
+
+#include <nlohmann/json.hpp> 
 #include "CommunicationBase.h"
 #include <memory>
 
@@ -92,15 +92,15 @@ class MulticastComm : public CommInterface {
 public:
     MulticastComm(const std::string& multicastAddress, int port)
         : multicastAddress_(multicastAddress), port_(port) {
-        // 初始化并绑定套接字...
+        
     }
 
     virtual void send(const std::string& message) override {
-        // 发送组播消息
+        
     }
 
     virtual std::string receive() override {
-        // 接收组播消息
+        
     }
 
 private:
@@ -113,11 +113,11 @@ public:
     static std::unique_ptr<CommInterface> createComm(const nlohmann::json& config) {
         const std::string type = config["type"];
         if (type == "UDP") {
-            return std::make_unique<UdpComm>(...);  // 使用正确的参数
+            return std::make_unique<UdpComm>(...);  
         } else if (type == "UDT") {
-            return std::make_unique<UdtComm>(...);  // 使用正确的参数
+            return std::make_unique<UdtComm>(...);  
         } else if (type == "Serial") {
-            return std::make_unique<SerialComm>(...);  // 使用正确的参数
+            return std::make_unique<SerialComm>(...);  
         } else if (type == "Multicast") {
             return std::make_unique<MulticastComm>(config["multicastAddress"], config["port"]);
         } else {
@@ -127,7 +127,7 @@ public:
 };
 
 int main() {
-    nlohmann::json config = ...;  // 从文件或其他来源加载配置
+    nlohmann::json config = ...;  
 
     auto comm = CommFactory::createComm(config);
     comm->send("Hello, devices!");

@@ -14,7 +14,7 @@ struct Message {
     MessageType type;
     std::string uuid;
     std::string device_id;
-    std::string content;  // 具体报文内容，可以根据需要进一步细化
+    std::string content;  
 };
 
 class CommQueue {
@@ -69,14 +69,14 @@ public:
 
     void listen() {
         while (running_) {
-            // 使用对应的port_来接收数据
-            // 假设数据已经被接收并存储在data变量中
-            // std::string data = ...;
+            
+            
+            
 
-            // 根据type_解析data并生成对应的Message
-            // Message msg = ...;
+            
+            
 
-            // queue_.push(msg);
+            
         }
     }
 
@@ -94,7 +94,7 @@ int main() {
     cmdHandler.start();
     statusHandler.start();
 
-    // ... 其他代码
+    
 
     fileHandler.stop();
     cmdHandler.stop();
