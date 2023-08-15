@@ -3,7 +3,14 @@
 #include <event2/bufferevent.h>
 #include <iostream>
 #include <cstring>
+#include <glog/logging.h>
 
+class Logger {
+public:
+    static void log(const std::string& message) {
+        std::cerr << "[LOG] " << message << std::endl;
+    }
+};
 // 全局变量
 struct event_base *base;
 int udpSocket;
@@ -20,6 +27,7 @@ void udp_read_cb(evutil_socket_t fd, short events, void *arg) {
     socklen_t remote_len = sizeof(remote);
 
     int bytesReceived = recvfrom(fd, buffer, sizeof(buffer) - 1, 0, (sockaddr*)&remote, &remote_len);
+    std::cout << "udp_read_cb bytesRecv=" << bytesReceived << "\n";
     if (bytesReceived > 0) {
         buffer[bytesReceived] = '\0';
         // 处理接收到的数据 ...
@@ -29,6 +37,10 @@ void udp_read_cb(evutil_socket_t fd, short events, void *arg) {
 }
 
 int main() {
+    //google::InitGoogleLogging(argv[0]);
+    // ...
+
+    
     // 初始化libevent
     event_set_log_callback(udp_error_cb);
     base = event_base_new();
@@ -64,6 +76,8 @@ int main() {
     event_free(udp_event);
     event_base_free(base);
     close(udpSocket);
+    // At the end, before exiting:
+    //google::ShutdownGoogleLogging();
 
     return 0;
 }

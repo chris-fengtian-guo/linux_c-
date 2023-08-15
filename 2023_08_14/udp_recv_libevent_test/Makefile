@@ -8,7 +8,7 @@ CC = g++
 CFLAGS = -g -Wall -std=c++11 -pthread
 
 # Libraries to link into executable
-LIBS = -luv -lrt -lglog -pthread
+LIBS = -levent -luv -lrt -lglog -pthread
 # libraries to link into executable:
 #LIBS = -lboost_system -lrt -lglog -pthread -lcrypto
 

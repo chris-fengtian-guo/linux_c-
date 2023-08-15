@@ -1,6 +1,16 @@
 #include <iostream>
 #include <uv.h>
 #include <nlohmann/json.hpp>
+#include <iostream>
+#include <string>
+#include <uv.h>
+#include <queue>
+#include <mutex>
+#include "msg_hdr.h"
+
+std::queue<MsgHeader> data_queue;
+std::mutex mtx;
+
 
 void send_msg(uv_udp_t* client, const sockaddr* dest, const char* buffer, size_t len) {
     uv_buf_t buf = uv_buf_init((char*)buffer, len);
@@ -21,7 +31,7 @@ int main() {
     uv_udp_init(loop, &client);
 
     sockaddr_in dest;
-    uv_ip4_addr("127.0.0.1", 8080, &dest); // 目标地址
+    uv_ip4_addr("127.0.0.1", 12345, &dest); // 目标地址
 
     // 发送 MSG_REQUIRE
     {
