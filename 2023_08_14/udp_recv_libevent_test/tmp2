@@ -1,0 +1,13 @@
+// 发送 MSG_REQUIRE
+{
+    MsgHeader header = {MSG_REQUIRE, msg_serialized.size()};  // Use msg_serialized.size() instead of sizeof(nlohmann::json)
+    ...
+}
+
+case MSG_FILE: {
+    std::string filePath(dataStart, header->data_len - sizeof(uint64_t));  // Use a length-limited constructor
+    uint64_t fileSize;
+    memcpy(&fileSize, dataStart + filePath.size(), sizeof(uint64_t));
+    ...
+}
+

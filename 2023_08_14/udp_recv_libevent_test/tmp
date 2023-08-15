@@ -1,0 +1,39 @@
+void udp_read_cb(evutil_socket_t fd, short events, void *arg) {
+    char buffer[4096];
+    sockaddr_in remote;
+    socklen_t remote_len = sizeof(remote);
+
+    int bytesReceived = recvfrom(fd, buffer, sizeof(buffer) - 1, 0, (sockaddr*)&remote, &remote_len);
+    std::cout << "udp_read_cb bytesRecv=" << bytesReceived << "\n";
+    
+    if (bytesReceived > 0) {
+        buffer[bytesReceived] = '\0';
+        
+        // Parse the received message
+        MsgHeader* header = reinterpret_cast<MsgHeader*>(buffer);
+        if (bytesReceived >= static_cast<int>(sizeof(MsgHeader)) + header->data_len) {
+            char* dataStart = buffer + sizeof(MsgHeader);
+            switch(header->type) {
+                case MSG_REQUIRE: {
+                    std::string jsonStr(dataStart, header->data_len);
+                    std::cout << "Received MSG_REQUIRE with JSON data: " << jsonStr << std::endl;
+                    break;
+                }
+                case MSG_FILE: {
+                    std::string filePath(dataStart);
+                    uint64_t fileSize;
+                    memcpy(&fileSize, dataStart + filePath.size(), sizeof(uint64_t));
+                    std::cout << "Received MSG_FILE with path: " << filePath << " and size: " << fileSize << std::endl;
+                    break;
+                }
+                default:
+                    Logger::log("Unknown message type received");
+                    break;
+            }
+        } else {
+            Logger::log("Received incomplete message");
+        }
+    } else if (bytesReceived < 0) {
+        Logger::log("Error while reading from UDP socket");
+    }
+}

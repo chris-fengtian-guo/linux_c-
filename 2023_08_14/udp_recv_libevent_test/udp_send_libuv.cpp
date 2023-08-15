@@ -35,11 +35,13 @@ int main() {
 
     // 发送 MSG_REQUIRE
     {
-        MsgHeader header = {MSG_REQUIRE, sizeof(nlohmann::json)};
+        //MsgHeader header = {MSG_REQUIRE, sizeof(nlohmann::json)};
+        MsgHeader header = {MSG_REQUIRE, 0};  // Use msg_serialized.size() instead of sizeof(nlohmann::json)
         MsgRequire require_msg = {{ {"key", "value"} }}; // 举例的JSON数据
 
         std::string msg_serialized = require_msg.data.dump();
         char buffer[sizeof(MsgHeader) + msg_serialized.size()];
+	header.data_len = msg_serialized.size();
         memcpy(buffer, &header, sizeof(MsgHeader));
         memcpy(buffer + sizeof(MsgHeader), msg_serialized.c_str(), msg_serialized.size());
 

@@ -1,0 +1,13 @@
+{
+    "udp": {
+        "port": 8080,
+        "queue_sizes": {
+            "send_queue": 100,
+            "receive_queue": 100,
+            "processing_queue": 150
+        }
+    },
+    "threads": {
+        "count": 4
+    }
+}

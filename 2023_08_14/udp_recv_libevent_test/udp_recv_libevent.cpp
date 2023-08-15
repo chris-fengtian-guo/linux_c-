@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstring>
 #include <glog/logging.h>
+#include "msg_hdr.h"
 
 class Logger {
 public:
@@ -20,7 +21,6 @@ void udp_error_cb(int severity, const char *msg) {
     Logger::log(std::string("UDP Error (Severity: ") + std::to_string(severity) + "): " + msg);
 }
 
-// UDP接收回调
 void udp_read_cb(evutil_socket_t fd, short events, void *arg) {
     char buffer[4096];
     sockaddr_in remote;
@@ -28,13 +28,39 @@ void udp_read_cb(evutil_socket_t fd, short events, void *arg) {
 
     int bytesReceived = recvfrom(fd, buffer, sizeof(buffer) - 1, 0, (sockaddr*)&remote, &remote_len);
     std::cout << "udp_read_cb bytesRecv=" << bytesReceived << "\n";
+    
     if (bytesReceived > 0) {
         buffer[bytesReceived] = '\0';
-        // 处理接收到的数据 ...
+        
+        // Parse the received message
+        MsgHeader* header = reinterpret_cast<MsgHeader*>(buffer);
+        if (bytesReceived >= static_cast<int>(sizeof(MsgHeader)) + header->data_len) {
+            char* dataStart = buffer + sizeof(MsgHeader);
+            switch(header->type) {
+                case MSG_REQUIRE: {
+                    std::string jsonStr(dataStart, header->data_len);
+                    std::cout << "Received MSG_REQUIRE with JSON data: " << jsonStr << std::endl;
+                    break;
+                }
+                case MSG_FILE: {
+    		    std::string filePath(dataStart, header->data_len - sizeof(uint64_t));  // Use a length-limited constructor
+    		    uint64_t fileSize;
+    		    memcpy(&fileSize, dataStart + filePath.size(), sizeof(uint64_t));
+                    std::cout << "Received MSG_FILE with path: " << filePath << " and size: " << fileSize << std::endl;
+                    break;
+                }
+                default:
+                    Logger::log("Unknown message type received");
+                    break;
+            }
+        } else {
+            Logger::log("Received incomplete message");
+        }
     } else if (bytesReceived < 0) {
         Logger::log("Error while reading from UDP socket");
     }
 }
+
 
 int main() {
     //google::InitGoogleLogging(argv[0]);
