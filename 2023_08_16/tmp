@@ -1,0 +1,8 @@
+char* buffer = /* your buffer */;
+int length = /* your length */;
+
+std::vector<uint8_t> data(buffer, buffer + length);
+struct Message {
+    std::vector<uint8_t> data;
+    sockaddr_in target_addr;
+};

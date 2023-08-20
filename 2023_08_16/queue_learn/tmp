@@ -1,0 +1,21 @@
+template <typename T>
+class ThreadSafeQueue {
+    // ... other methods and members
+
+    T* dequeue() {
+        std::unique_lock<std::mutex> lock(_mutex);
+        while (_queue.empty()) {
+            _cond_var.wait(lock);
+        }
+
+        if (!_queue.empty()) {
+            T* item = new T(_queue.front());
+            _queue.pop();
+            return item;
+        }
+
+        return nullptr;
+    }
+
+    // ... other methods and members
+};

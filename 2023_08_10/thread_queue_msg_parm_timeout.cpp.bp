@@ -1,0 +1,69 @@
+#include <iostream>
+#include <thread>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <vector>
+#include <chrono>
+#include <pthread.h>
+
+const int MAX_THREADS = 5;
+const std::chrono::seconds THREAD_TIMEOUT(30);
+
+std::queue<std::string> messageQueue;
+std::mutex queueMutex;
+std::condition_variable dataAvailable;
+
+void threadFunction(const std::string& message) {
+    // 这只是一个简单的处理函数，你可以根据消息内容进行适当的操作
+    std::cout << "Thread is processing message: " << message << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(10)); // 模拟线程工作10秒
+}
+
+void manageThreads() {
+    std::vector<std::thread> threads;
+
+    while (true) {
+        std::unique_lock<std::mutex> lock(queueMutex);
+        dataAvailable.wait(lock, [] { return !messageQueue.empty() || threads.size() < MAX_THREADS; });
+
+        // 如果当前活跃的线程数量少于MAX_THREADS，并且队列中有消息，则创建新的线程来处理消息
+        while (threads.size() < MAX_THREADS && !messageQueue.empty()) {
+            std::string msg = messageQueue.front();
+            messageQueue.pop();
+
+            threads.emplace_back(threadFunction, msg);
+        }
+
+        // 移除已完成的线程，并检查超时的线程
+        auto it = threads.begin();
+        while (it != threads.end()) {
+            if (it->joinable()) {
+                auto status = pthread_timedjoin_np(it->native_handle(), nullptr, THREAD_TIMEOUT);
+                if (status == ETIMEDOUT) {
+                    pthread_cancel(it->native_handle());
+                    it->detach();
+                    std::cout << "Thread timeout. Thread terminated." << std::endl;
+                    it = threads.erase(it);
+                } else {
+                    ++it;
+                }
+            } else {
+                it = threads.erase(it);
+            }
+        }
+    }
+}
+
+int main() {
+    // 假设我们有以下消息要处理
+    for (int i = 0; i < 15; ++i) {
+        messageQueue.push("Message " + std::to_string(i));
+    }
+
+    std::thread managerThread(manageThreads);
+
+    managerThread.join();
+
+    return 0;
+}
