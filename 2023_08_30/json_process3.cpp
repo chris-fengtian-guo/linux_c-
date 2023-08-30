@@ -21,8 +21,23 @@ T parse_with_default(const nlohmann::json& input) {
     nlohmann::json combined = T::default_json();
     std::cout << "Default JSON:\n" << combined.dump(4) << std::endl;
 
-    for (auto it = input.begin(); it != input.end(); ++it) {
-        combined[it.key()] = it.value();
+    for (auto& item : input.items()) {
+       auto key = item.key();
+       auto& value = item.value();
+
+        // 检查输入的键是否在默认JSON中
+        if (!combined.contains(key)) {
+            std::cerr << "Warning: Unexpected key '" << key << "' in the input JSON." << std::endl;
+            continue;
+        }
+
+        // 检查值是否为字符串
+        if (!value.is_string()) {
+            std::cerr << "Warning: Value for key '" << key << "' is not a string." << std::endl;
+            continue;
+        }
+
+        combined[key] = value;
     }
 
     std::cout << "Combined JSON:\n" << combined.dump(4) << std::endl;
