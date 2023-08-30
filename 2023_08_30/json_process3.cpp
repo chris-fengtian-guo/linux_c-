@@ -14,20 +14,6 @@ struct require_struct {
     }
 };
 
-#define DEFINE_DEFAULT_JSON(Type, DefaultJson) \
-    namespace nlohmann { \
-        template <> \
-        struct adl_serializer<Type> { \
-            static Type from_json(const json &j) { \
-                std::cout << "Converting from JSON to " << #Type << std::endl; \
-                return parse_with_default<Type>(j); \
-            } \
-            static void to_json(json &j, const Type &t) { \
-                j = json(t); \
-            } \
-        }; \
-    }
-
 template<typename T>
 T parse_with_default(const nlohmann::json& input) {
     std::cout << "Inside parse_with_default:\nOriginal Input:\n" << input.dump(4) << std::endl;
@@ -47,13 +33,26 @@ T parse_with_default(const nlohmann::json& input) {
     return result;
 }
 
+namespace nlohmann {
+    template <>
+    struct adl_serializer<require_struct> {
+        static void from_json(const json &j, require_struct &t) {
+            // 这里可以直接调用 parse_with_default 方法，如之前的例子所示
+            t = parse_with_default<require_struct>(j);
+        }
+
+        static void to_json(json &j, const require_struct &t) {
+            j = json{{"field1", t.field1}, {"field2", t.field2}};
+        }
+    };
+}
+
+
 void from_json(const nlohmann::json& j, require_struct& r) {
     j.at("field1").get_to(r.field1);
     j.at("field2").get_to(r.field2);
 }
 
-
-DEFINE_DEFAULT_JSON(require_struct, require_struct::default_json())
 
 int main() {
     nlohmann::json j = {{"field1", "data1"}};
