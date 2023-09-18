@@ -1,0 +1,16 @@
+#libevent pkg-config source file
+
+prefix=/root/autodl-tmp/linux_c++_clean/my_libs
+exec_prefix=/root/autodl-tmp/linux_c++_clean/my_libs
+libdir=/root/autodl-tmp/linux_c++_clean/my_libs/lib
+includedir=/root/autodl-tmp/linux_c++_clean/my_libs/include
+
+Name: libevent_pthreads
+Description: libevent_pthreads adds pthreads-based threading support to libevent
+Version: 2.1.12
+Requires: libevent
+Conflicts:
+Libs: -L${libdir} -levent_pthreads
+Libs.private:  
+Cflags: -I${includedir} 
+

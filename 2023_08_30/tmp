@@ -1,0 +1,17 @@
+#include <nlohmann/json.hpp>
+
+#define DEFINE_FROM_JSON_FOR_TYPE(TYPE, ...) \
+    inline void from_json(const nlohmann::json& j, TYPE& obj) { \
+        ((j.at(#__VA_ARGS__).get_to(obj.__VA_ARGS__)), ...); \
+    }
+
+struct require_struct {
+    std::string field1;
+    std::string field2;
+};
+
+DEFINE_FROM_JSON_FOR_TYPE(require_struct, field1, field2)
+
+int main() {
+    // ... your main code ...
+}

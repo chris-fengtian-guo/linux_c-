@@ -1,0 +1,16 @@
+#libevent pkg-config source file
+
+prefix=/root/autodl-tmp/linux_c++_clean/my_libs
+exec_prefix=/root/autodl-tmp/linux_c++_clean/my_libs
+libdir=/root/autodl-tmp/linux_c++_clean/my_libs/lib
+includedir=/root/autodl-tmp/linux_c++_clean/my_libs/include
+
+Name: libevent
+Description: libevent is an asynchronous notification event loop library
+Version: 2.1.12
+Requires:
+Conflicts:
+Libs: -L${libdir} -levent
+Libs.private: 
+Cflags: -I${includedir}
+

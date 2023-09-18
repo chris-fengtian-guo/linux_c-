@@ -1,0 +1,14 @@
+rm -f ./temp/usr/local/lib/libz.a
+cp libz.a ./temp/usr/local/lib
+chmod 644 ./temp/usr/local/lib/libz.a
+cp libz.so.1.3 ./temp/usr/local/lib
+chmod 755 ./temp/usr/local/lib/libz.so.1.3
+rm -f ./temp/usr/local/share/man/man3/zlib.3
+cp zlib.3 ./temp/usr/local/share/man/man3
+chmod 644 ./temp/usr/local/share/man/man3/zlib.3
+rm -f ./temp/usr/local/lib/pkgconfig/zlib.pc
+cp zlib.pc ./temp/usr/local/lib/pkgconfig
+chmod 644 ./temp/usr/local/lib/pkgconfig/zlib.pc
+rm -f ./temp/usr/local/include/zlib.h ./temp/usr/local/include/zconf.h
+cp zlib.h zconf.h ./temp/usr/local/include
+chmod 644 ./temp/usr/local/include/zlib.h ./temp/usr/local/include/zconf.h

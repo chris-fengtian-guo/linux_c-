@@ -1,0 +1,16 @@
+#libevent pkg-config source file
+
+prefix=/root/autodl-tmp/linux_c++_clean/my_libs
+exec_prefix=/root/autodl-tmp/linux_c++_clean/my_libs
+libdir=/root/autodl-tmp/linux_c++_clean/my_libs/lib
+includedir=/root/autodl-tmp/linux_c++_clean/my_libs/include
+
+Name: libevent_openssl
+Description: libevent_openssl adds openssl-based TLS support to libevent
+Version: 2.1.12
+Requires: libevent
+Conflicts:
+Libs: -L${libdir} -levent_openssl
+Libs.private:   -L/usr/lib/x86_64-linux-gnu/libssl.so -L/usr/lib/x86_64-linux-gnu/libcrypto.so
+Cflags: -I${includedir} 
+
